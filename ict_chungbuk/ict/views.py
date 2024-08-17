@@ -5,6 +5,17 @@ from tensorflow.keras.preprocessing.image import img_to_array, load_img
 from PIL import Image
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from .models import Userlist
+from .serializers import UserlistSerializer
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from django.contrib.auth import authenticate
+
+
 import pytesseract
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -69,11 +80,6 @@ def predict(request):
         return JsonResponse({'error': str(e)}, status=500)
     
 
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from .models import Userlist
-from .serializers import UserlistSerializer
 
 @api_view(['POST'])
 def register_user(request):
@@ -113,3 +119,44 @@ def register_user(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# views.py
+
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from .models import Userlist
+import json
+
+@csrf_exempt
+def login_view(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+            password = data.get('password')
+
+            print(f"Received login request: Username={username}, Password={password}")
+
+            # 사용자 모델에서 해당 ID로 사용자 찾기
+            try:
+                user = Userlist.objects.get(username=username)
+            except Userlist.DoesNotExist:
+                user = None
+
+            # 사용자가 존재하고, 비밀번호가 일치하는지 확인
+            if user is not None:
+                if user.password == password:
+                    # 인증 성공
+                    return JsonResponse({'message': '로그인 성공'}, status=200)
+                else:
+                    # 인증 실패
+                    return JsonResponse({'error': 'ID나 비밀번호가 일치하지 않습니다.'}, status=400)
+            else:
+                # 사용자가 존재하지 않음
+                return JsonResponse({'error': 'ID나 비밀번호가 일치하지 않습니다.'}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': '잘못된 JSON 형식입니다.'}, status=400)
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            return JsonResponse({'error': '서버 오류가 발생했습니다.'}, status=500)
+    else:
+        return JsonResponse({'error': '잘못된 요청입니다.'}, status=400)

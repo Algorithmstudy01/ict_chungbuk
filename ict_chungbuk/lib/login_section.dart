@@ -1,14 +1,71 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'homepage.dart';
-import 'Find_Id_section.dart'; // Import the Find ID section
-import 'Find_Password_section.dart'; // Import the Find Password section
-import 'signup_section.dart'; // Import the SignUp section
+import 'Find_Id_section.dart';
+import 'Find_Password_section.dart';
+import 'signup_section.dart';
 
-class LoginSection extends StatelessWidget {
+class LoginSection extends StatefulWidget {
+  @override
+  _LoginSectionState createState() => _LoginSectionState();
+}
+
+class _LoginSectionState extends State<LoginSection> {
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  Future<void> _login() async {
+    final username = _usernameController.text;
+    final password = _passwordController.text;
+
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter both username and password')),
+      );
+      return;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8000/login/'), // Ensure trailing slash
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'username': username,
+          'password': password,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        if (responseData['message'] == '로그인 성공') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Invalid credentials')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unexpected error: ${response.body}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Exception: ${e.toString()}')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Set background to white
+      backgroundColor: Colors.white,
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
@@ -16,6 +73,7 @@ class LoginSection extends StatelessWidget {
           children: <Widget>[
             SizedBox(height: 20),
             TextField(
+              controller: _usernameController,
               decoration: InputDecoration(
                 labelText: '아이디(이메일 아이디)',
                 border: OutlineInputBorder(),
@@ -23,31 +81,27 @@ class LoginSection extends StatelessWidget {
             ),
             SizedBox(height: 20),
             TextField(
+              controller: _passwordController,
+              obscureText: true,
               decoration: InputDecoration(
-                labelText: '비밀번호 ',
+                labelText: '비밀번호',
                 border: OutlineInputBorder(),
               ),
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
-                // Navigate to the homepage on login
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => HomePage()),
-                );
-              },
+              onPressed: _login,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple[300], // Set the button color
+                backgroundColor: Colors.purple[300],
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12), // Round the edges of the button
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
               child: Text(
                 '로그인',
                 style: TextStyle(
-                  color: Colors.white, // Change text color to white
+                  color: Colors.white,
                   fontSize: 18,
                 ),
               ),
@@ -58,7 +112,6 @@ class LoginSection extends StatelessWidget {
               children: <Widget>[
                 TextButton(
                   onPressed: () {
-                    // Navigate to Find ID section
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => FindIDSection()),
@@ -72,7 +125,6 @@ class LoginSection extends StatelessWidget {
                 Text('|', style: TextStyle(color: Colors.black)),
                 TextButton(
                   onPressed: () {
-                    // Navigate to Find Password section
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => FindPasswordSection()),
@@ -86,7 +138,6 @@ class LoginSection extends StatelessWidget {
                 Text('|', style: TextStyle(color: Colors.black)),
                 TextButton(
                   onPressed: () {
-                    // Navigate to Sign Up section
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => SignUpSection()),
