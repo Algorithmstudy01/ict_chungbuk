@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'login_section.dart';  // Ensure you import the login section
 
 class SignUpSection extends StatefulWidget {
   @override
@@ -12,8 +13,20 @@ class _SignUpSectionState extends State<SignUpSection> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black), // 화살표 아이콘을 좌측 상단에 배치하고 흰색으로 설정
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => LoginPage()), // 로그인 페이지로 이동
+            );
+          },
+        ),
+        backgroundColor: Colors.white, // AppBar의 배경색 설정
+        elevation: 0,
+      ),
       backgroundColor: Colors.white,
-
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -87,7 +100,28 @@ class _SignUpSectionState extends State<SignUpSection> {
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  // Handle sign up logic
+                  // 회원가입 완료 메시지를 띄우고 로그인 창으로 이동
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('회원가입 완료'),
+                        content: Text('회원가입이 완료되었습니다.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => LoginPage()), // 로그인 페이지로 이동
+                              );
+                            },
+                            child: Text('확인'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
                 },
                 child: Text(
                   '회원가입',
