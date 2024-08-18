@@ -25,60 +25,155 @@ from django.urls import path
 # ict/views.py
 
 
+import torch
+import torchvision.transforms as transforms
+from PIL import Image
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+import pytesseract
 
-# 모델 로딩
-model = tf.keras.models.load_model('/Users/seon/Desktop/pill_identification_porject/models/model.keras')
+import os
+import json
+import torch
+import torchvision.transforms as transforms
+from PIL import Image
+import pytesseract
+from django.shortcuts import render
+from django.http import JsonResponse
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from django.conf import settings
+from .models import Userlist
+import torch
+import torchvision
+from django.conf import settings
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from PIL import Image
+import torchvision.transforms as transforms
+import json
+import os
 
-# 레이블 맵 로딩
-label_map_path = '/Users/seon/Desktop/pill_identification_porject/models/label_map.json'
-with open(label_map_path, 'r') as f:
-    label_map = json.load(f)
-reverse_label_map = {v: k for k, v in label_map.items()}
+# Define the Faster R-CNN model class
+def get_model(num_classes):
+    from torchvision.models.detection import FasterRCNN
+    from torchvision.models.mobilenetv3 import mobilenet_v3_large
+    from torchvision.models.detection.anchor_utils import AnchorGenerator
 
+    # MobileNetV3 based backbone
+    backbone = mobilenet_v3_large(pretrained=True).features
+    backbone.out_channels = 960
+
+    # Anchor generator
+    anchor_generator = AnchorGenerator(
+        sizes=((32, 64, 128, 256, 512),),
+        aspect_ratios=((0.5, 1.0, 2.0),) * 5
+    )
+
+    # ROI Align
+    roi_pooler = torchvision.ops.MultiScaleRoIAlign(
+        featmap_names=['0'], output_size=7, sampling_ratio=2
+    )
+
+    # Faster R-CNN model
+    model = FasterRCNN(
+        backbone,
+        num_classes=num_classes,
+        rpn_anchor_generator=anchor_generator,
+        box_roi_pool=roi_pooler
+    )
+
+    return model
+
+# Load the model
+def load_model():
+    model = get_model(num_classes=60)
+    model_path = settings.MODEL_PATH  # Use Django settings for model path
+    try:
+        model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+        model.eval()
+    except RuntimeError as e:
+        print(f"Error loading state dict: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+    return model
+
+model = load_model()
+
+# Preprocess image
 def preprocess_image(image):
-    image = Image.open(image)
-    image = image.convert('RGB')
-    image = image.resize((150, 150))
-    img_array = img_to_array(image) / 255.0
-    img_array = np.expand_dims(img_array, axis=0)  # 배치 차원 추가
-    return img_array
+    image = Image.open(image).convert("RGB")
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+    ])
+    img_tensor = transform(image).unsqueeze(0)
+    return img_tensor
 
-def extract_text_from_image(image):
-    image = Image.open(image)
-    text = pytesseract.image_to_string(image)
-    return text.strip()
+# Find pill information
+def find_pill_info(predicted_category_id, root_dir):
+    for folder_name in os.listdir(root_dir):
+        folder_path = os.path.join(root_dir, folder_name)
+        if os.path.isdir(folder_path):
+            for file_name in os.listdir(folder_path):
+                if file_name.endswith('.json'):
+                    json_path = os.path.join(folder_path, file_name)
+                    with open(json_path, 'r') as f:
+                        data = json.load(f)
+                        if any(cat['id'] == predicted_category_id for cat in data['categories']):
+                            pill_info = {
+                                "code": data['images'][0].get('drug_N', 'N/A'),
+                                "name": data['images'][0].get('dl_name', 'N/A'),
+                                "image_path": os.path.join(folder_path, data['images'][0].get('file_name'))
+                            }
+                            return pill_info
+    return None
 
+# Predict view function
 @api_view(['POST'])
 def predict(request):
     if 'file' not in request.FILES:
-        return JsonResponse({'error': 'No file provided'}, status=400)
-
-    image_file = request.FILES['file']
-    image_array = preprocess_image(image_file)
-    text = extract_text_from_image(image_file)
-
-    try:
-        predictions = model.predict(image_array)
-        predicted_class = np.argmax(predictions, axis=1)[0]
-        predicted_label = reverse_label_map.get(predicted_class, 'Unknown')
-        confidence = np.max(predictions)
-
-        if predicted_label != 'Unknown':
-            pill_name, company_name, class_no = predicted_label.split('_')
-        else:
-            pill_name, company_name, class_no = 'Unknown', 'Unknown', 'Unknown'
-
-        return JsonResponse({
-            'prediction': predicted_label,
-            'confidence': float(confidence),
-            'extracted_text': text,
-            'pill_name': pill_name,
-            'company_name': company_name,
-            'class_no': class_no
-        })
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return Response({'error': 'No file provided'}, status=400)
     
+    image_file = request.FILES['file']
+    
+    try:
+        # Preprocess image
+        image_tensor = preprocess_image(image_file)
+        
+        # Make prediction
+        with torch.no_grad():
+            outputs = model(image_tensor)
+            pred_scores = outputs[0]['scores'].cpu().numpy()
+            pred_labels = outputs[0]['labels'].cpu().numpy()
+
+            # Filter results
+            threshold = 0.1
+            pred_labels = pred_labels[pred_scores >= threshold]
+            pred_scores = pred_scores[pred_scores >= threshold]
+
+            if len(pred_labels) == 0:
+                return Response({'error': 'No predictions above the threshold'}, status=404)
+
+            # Get the most confident prediction
+            max_score_idx = pred_scores.argmax()
+            predicted_category_id = pred_labels[max_score_idx]
+            confidence = float(pred_scores[max_score_idx])
+
+        # Find pill information based on the predicted class
+        root_dir = settings.DATA_ROOT_DIR
+        pill_info = find_pill_info(predicted_category_id, root_dir)
+        
+        if pill_info:
+            return Response({
+                'pill_info': pill_info,
+                'confidence': confidence,
+            })
+        else:
+            return Response({'error': 'Pill information not found'}, status=404)
+    
+    except Exception as e:
+        print(f"Exception occurred: {str(e)}")
+        return Response({'error': str(e)}, status=500)
 
 
 @api_view(['POST'])

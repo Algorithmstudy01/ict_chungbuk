@@ -145,3 +145,12 @@ DEFAULT_CHARSET = 'utf-8'
 # settings.py
 # settings.py
 APPEND_SLASH = True
+# settings.py
+
+import os
+
+# Path to the model file
+MODEL_PATH = '/Users/seon/Desktop/ict_chungbuk2/pill_detection_model_59_more.pth'
+
+# Root directory where JSON files and images are stored
+DATA_ROOT_DIR = '/Users/seon/Desktop/data_59'

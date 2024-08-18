@@ -29,12 +29,11 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   File? _image;
   final picker = ImagePicker();
-  String _prediction = '';
+  String _pillCode = '';
+  String _pillName = '';
   String _confidence = '';
   String _extractedText = '';
-  String _pillName = '';
-  String _companyName = '';
-  String _classNo = '';
+  bool _isLoading = false; // Flag to track loading state
 
   Future<void> _pickImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -42,14 +41,19 @@ class _MyHomePageState extends State<MyHomePage> {
     if (pickedFile != null) {
       setState(() {
         _image = File(pickedFile.path);
+        _pillCode = '';      // Reset values for new image
+        _pillName = '';
+        _confidence = '';
+        _extractedText = '';
+        _isLoading = true;   // Start loading
       });
 
-      _uploadImage(_image!);
+      await _uploadImage(_image!);
     }
   }
 
   Future<void> _uploadImage(File image) async {
-    final url = Uri.parse('http://10.0.2.2:8000/predict/'); // 에뮬레이터에서의 주소
+    final url = Uri.parse('http://10.0.2.2:8000/predict/'); // Ensure this URL is correct
 
     final request = http.MultipartRequest('POST', url)
       ..files.add(await http.MultipartFile.fromPath('file', image.path));
@@ -62,21 +66,29 @@ class _MyHomePageState extends State<MyHomePage> {
         final decodedData = json.decode(responseData);
 
         setState(() {
-          _prediction = decodedData['prediction'].toString();
-          _confidence = decodedData['confidence'].toString();
-          _extractedText = decodedData['extracted_text'].toString();
-          _pillName = decodedData['pill_name'].toString();
-          _companyName = decodedData['company_name'].toString();
-          _classNo = decodedData['class_no'].toString();
+          final pillInfo = decodedData['pill_info'];
+          _pillCode = pillInfo['code'] ?? 'Unknown';
+          _pillName = pillInfo['name'] ?? 'Unknown';
+          _confidence = decodedData['confidence']?.toString() ?? 'Unknown';
+          _extractedText = decodedData['extracted_text']?.toString() ?? 'No text found';
+          _isLoading = false; // Stop loading
         });
       } else {
         setState(() {
-          _prediction = 'Error: ${response.statusCode}';
+          _pillCode = 'Error: ${response.statusCode}';
+          _pillName = 'Error';
+          _confidence = 'Error';
+          _extractedText = 'Error';
+          _isLoading = false; // Stop loading
         });
       }
     } catch (e) {
       setState(() {
-        _prediction = 'Error: $e';
+        _pillCode = 'Error: $e';
+        _pillName = 'Error';
+        _confidence = 'Error';
+        _extractedText = 'Error';
+        _isLoading = false; // Stop loading
       });
     }
   }
@@ -95,40 +107,34 @@ class _MyHomePageState extends State<MyHomePage> {
               _image == null
                   ? Text('No image selected.')
                   : Container(
-                      constraints: BoxConstraints(maxHeight: 300), // 이미지 최대 높이 제한
+                      constraints: BoxConstraints(maxHeight: 300), // Image maximum height limit
                       child: Image.file(_image!),
                     ),
               SizedBox(height: 20),
-              Text(
-                'Prediction: $_prediction',
-                style: TextStyle(fontSize: 20),
-              ),
-              SizedBox(height: 10),
-              Text(
-                'Confidence: $_confidence',
-                style: TextStyle(fontSize: 20),
-              ),
-              SizedBox(height: 10),
-              Text(
-                'Extracted Text: $_extractedText',
-                style: TextStyle(fontSize: 20),
-              ),
-              SizedBox(height: 10),
-              Text(
-                'Pill Name: $_pillName',
-                style: TextStyle(fontSize: 20),
-              ),
-              SizedBox(height: 10),
-              Text(
-                'Company Name: $_companyName',
-                style: TextStyle(fontSize: 20),
-              ),
-              SizedBox(height: 10),
-              Text(
-                'Class Number: $_classNo',
-                style: TextStyle(fontSize: 20),
-              ),
-              SizedBox(height: 20),
+              if (_isLoading) // Show loading indicator if loading
+                CircularProgressIndicator(),
+              if (!_isLoading) ...[
+                Text(
+                  'Pill Code: $_pillCode',
+                  style: TextStyle(fontSize: 20),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  'Pill Name: $_pillName',
+                  style: TextStyle(fontSize: 20),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  'Confidence: $_confidence',
+                  style: TextStyle(fontSize: 20),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  'Extracted Text: $_extractedText',
+                  style: TextStyle(fontSize: 20),
+                ),
+                SizedBox(height: 20),
+              ],
               ElevatedButton(
                 onPressed: _pickImage,
                 child: Text('Pick Image'),
