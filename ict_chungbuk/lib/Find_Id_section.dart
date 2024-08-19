@@ -34,7 +34,7 @@ class _FindIDSectionState extends State<FindIDSection> {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       setState(() {
-        _resultMessage = '아이디: ${data['username']}'; // Display the retrieved username
+        _resultMessage = '아이디: ${data['id']}'; // Display the retrieved username
       });
     } else {
       final data = jsonDecode(response.body);

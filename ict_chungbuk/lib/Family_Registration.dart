@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'my_page.dart'; // Import the MyPage screen
 
 class FamilyRegister extends StatelessWidget {
+  final String userId; // Declare userId as a final variable
+
+  FamilyRegister({required this.userId}); // Initialize userId through the constructor
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -11,7 +15,7 @@ class FamilyRegister extends StatelessWidget {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => MyPage()),
+              MaterialPageRoute(builder: (context) => MyPage(userId: userId)), // Pass userId to MyPage
             );
           },
         ),
@@ -98,7 +102,7 @@ class FamilyRegister extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => FamilyRegisterCompleteScreen()),
+                  MaterialPageRoute(builder: (context) => FamilyRegisterCompleteScreen(userId: userId)), // Pass userId to FamilyRegisterCompleteScreen
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -123,6 +127,10 @@ class FamilyRegister extends StatelessWidget {
 }
 
 class FamilyRegisterCompleteScreen extends StatelessWidget {
+  final String userId; // Declare userId as a final variable
+
+  FamilyRegisterCompleteScreen({required this.userId}); // Initialize userId through the constructor
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -132,7 +140,7 @@ class FamilyRegisterCompleteScreen extends StatelessWidget {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => MyPage()),
+              MaterialPageRoute(builder: (context) => MyPage(userId: userId)), // Pass userId to MyPage
             );
           },
         ),

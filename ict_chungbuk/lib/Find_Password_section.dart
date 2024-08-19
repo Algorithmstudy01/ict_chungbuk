@@ -15,10 +15,10 @@ class _FindPasswordSectionState extends State<FindPasswordSection> {
   String _resultMessage = ''; // This will hold the result message or password
 
   Future<void> _findPassword() async {
-    final String username = _usernameController.text;
+    final String id = _usernameController.text;
     final String email = _emailController.text;
 
-    if (username.isEmpty || email.isEmpty) {
+    if (id.isEmpty || email.isEmpty) {
       setState(() {
         _resultMessage = '아이디와 이메일을 입력해주세요.';
       });
@@ -29,7 +29,7 @@ class _FindPasswordSectionState extends State<FindPasswordSection> {
     final response = await http.post(
       Uri.parse(url),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'username': username, 'email': email}),
+      body: jsonEncode({'id': id, 'email': email}),
     );
 
     if (response.statusCode == 200) {

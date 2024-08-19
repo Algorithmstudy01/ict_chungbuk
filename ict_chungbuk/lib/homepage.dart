@@ -2,7 +2,15 @@ import 'package:flutter/material.dart';
 import 'my_page.dart';
 import 'alarm.dart';
 
+import 'package:flutter/material.dart';
+import 'my_page.dart';
+import 'alarm.dart';
+
 class HomePage extends StatefulWidget {
+  final String userId; // Declare userId
+
+  HomePage({required this.userId}); // Initialize userId through constructor
+
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -19,16 +27,23 @@ class _HomePageState extends State<HomePage> {
       if (index == 2) { // Index 2 corresponds to the "알림 설정" tab
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => AlarmPage()),
+          MaterialPageRoute(
+            builder: (context) => AlarmPage(userId: widget.userId), // Pass userId to AlarmPage
+          ),
         );
       } else if (index == 3) { // Index 3 corresponds to the "MY" tab
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => MyPage()),
+          MaterialPageRoute(
+            builder: (context) => MyPage(userId: widget.userId), // Pass userId to MyPage
+          ),
         );
       }
     }
   }
+
+
+
 
   @override
   Widget build(BuildContext context) {

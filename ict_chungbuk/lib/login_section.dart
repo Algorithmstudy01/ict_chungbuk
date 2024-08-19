@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:chungbuk_ict/my_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'homepage.dart';
@@ -7,57 +8,99 @@ import 'Find_Password_section.dart';
 import 'signup_section.dart';
 
 class LoginSection extends StatefulWidget {
+    
+  const LoginSection({Key? key}) : super(key: key);
+
   @override
   _LoginSectionState createState() => _LoginSectionState();
 }
 
 class _LoginSectionState extends State<LoginSection> {
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _idController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _showPassword = false; // 비밀번호 보이기 여부
 
-  Future<void> _login() async {
-    final username = _usernameController.text;
-    final password = _passwordController.text;
+void _login() async {
+    final String id = _idController.text;
+    final String password = _passwordController.text;
 
-    if (username.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter both username and password')),
-      );
-      return;
-    }
-
-    try {
-      final response = await http.post(
-        Uri.parse('http://10.0.2.2:8000/login/'), // Ensure trailing slash
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          'username': username,
-          'password': password,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = jsonDecode(response.body);
-        if (responseData['message'] == '로그인 성공') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomePage()),
-          );
+ if (id.isNotEmpty && password.isNotEmpty) {
+      try {
+        final response = await http.post(
+          Uri.parse('http://10.0.2.2:8000/login_view/'),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: json.encode({
+            'id': id,
+            'password': password,
+          }),
+        );
+        if (response.statusCode == 200) {
+          // 로그인 성공 시 처리
+          Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+            // 성공 시 페이지 이동
+            return MyPage(userId: id);
+          }));
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Invalid credentials')),
+          // 로그인 실패 시 처리
+          final responseBody = json.decode(response.body);
+          final errorMessage = responseBody['error'] ?? '알 수 없는 오류가 발생했습니다.';
+          print('Login error: $errorMessage');
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                content: Text(errorMessage),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("확인"),
+                  ),
+                ],
+              );
+            },
           );
         }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unexpected error: ${response.body}')),
+      } catch (e) {
+        // 오류 발생 시 처리
+        print('Error during login: $e');
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              content: Text('로그인 중 오류가 발생했습니다.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text("확인"),
+                ),
+              ],
+            );
+          },
         );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Exception: ${e.toString()}')),
+    } else {
+      // ID 또는 비밀번호 누락 시 처리
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: const Text("ID와 비밀번호를 입력하세요."),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text("확인"),
+              ),
+            ],
+          );
+        },
       );
     }
   }
@@ -73,7 +116,7 @@ class _LoginSectionState extends State<LoginSection> {
           children: <Widget>[
             SizedBox(height: 20),
             TextField(
-              controller: _usernameController,
+              controller: _idController,
               decoration: InputDecoration(
                 labelText: '아이디(이메일 아이디)',
                 border: OutlineInputBorder(),
@@ -156,3 +199,4 @@ class _LoginSectionState extends State<LoginSection> {
     );
   }
 }
+

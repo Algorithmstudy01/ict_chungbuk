@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'login_section.dart';
 import 'signup_section.dart';
 import 'homepage.dart'; // Import the HomePage
+import 'my_page.dart'; // Import MyPage
 
 class StartSection extends StatelessWidget {
   @override
@@ -30,10 +31,12 @@ class StartSection extends StatelessWidget {
                     // Start button
                     ElevatedButton(
                       onPressed: () {
-                        // Navigate to HomePage
+                        // Navigate to MyPage with a dummy userId
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => HomePage()),
+                          MaterialPageRoute(
+                            builder: (context) => MyPage(userId: 'dummy_user_id'), // Pass a default userId
+                          ),
                         );
                       },
                       child: Text('시작하기'),

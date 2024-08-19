@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:chungbuk_ict/user_api_service.dart';
 import 'login_section.dart';  // Ensure you import the login section
+import 'package:http/http.dart' as http;
 
 class SignUpSection extends StatefulWidget {
+  const SignUpSection({Key? key}) : super(key: key);
+
   @override
   _SignUpSectionState createState() => _SignUpSectionState();
 }
@@ -13,79 +16,100 @@ class _SignUpSectionState extends State<SignUpSection> {
   bool _isConfirmPasswordVisible = false;
 
   final TextEditingController _nicknameController = TextEditingController();
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _idController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
 
   Future<void> _signUp() async {
-    if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Passwords do not match')),
-      );
+    final String nickname = _nicknameController.text;
+    final String id = _idController.text;
+    final String password = _passwordController.text;
+    final String confirmPassword = _confirmPasswordController.text;
+    final String location = _locationController.text;
+    final String email = _emailController.text;
+
+    if (!_isValidEmail(email)) {
+      _showErrorDialog('올바른 이메일 형식이 아닙니다.');
       return;
     }
 
-    if (_nicknameController.text.isEmpty ||
-        _usernameController.text.isEmpty ||
-        _passwordController.text.isEmpty ||
-        _confirmPasswordController.text.isEmpty ||
-        _locationController.text.isEmpty ||
-        _emailController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill in all fields')),
-      );
+    if (password != confirmPassword) {
+      _showErrorDialog('비밀번호가 일치하지 않습니다.');
       return;
     }
 
-    try {
-      final response = await ApiService.registerUser(
-        _usernameController.text,  // 'id' parameter in the ApiService method
-        _nicknameController.text,
-        _passwordController.text,
-        _locationController.text,
-        _emailController.text,
-      );
+    final response = await http.post(
+      Uri.parse('http://10.0.2.2:8000/register/'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'nickname': nickname,
+        'id': id,
+        'password': password,
+        'location': location,
+        'email': email,
+      }),
+    );
 
-      if (response.statusCode == 201) {
-        // Show success dialog
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text('회원가입 완료'),
-              content: Text('회원가입이 완료되었습니다.'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => LoginSection()), // Navigate to login page
-                    );
-                  },
-                  child: Text('확인'),
-                ),
-              ],
-            );
-          },
-        );
-      } else if (response.statusCode == 400) {
-        final Map<String, dynamic> errorResponse = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${errorResponse['message']}')),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unexpected error: ${response.body}')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Exception: ${e.toString()}')),
-      );
+    if (response.statusCode == 201) {
+      _showSuccessDialog();
+    } else {
+      final responseBody = jsonDecode(utf8.decode(response.bodyBytes, allowMalformed: true));
+      _showErrorDialog(responseBody['message'] ?? 'Unknown error');
     }
+  }
+
+  bool _isValidEmail(String email) {
+    // 이메일 형식 확인하는 정규식
+    final RegExp emailRegex = RegExp(r'^[\w-.]+@([\w-]+.)+[\w-]{2,4}$');
+    return emailRegex.hasMatch(email);
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('회원가입 완료'),
+          content: Text('회원가입이 완료되었습니다.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginSection()), // Navigate to login page
+                );
+              },
+              child: Text('확인'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -113,7 +137,7 @@ class _SignUpSectionState extends State<SignUpSection> {
           children: [
             _buildTextField(_nicknameController, '닉네임을 입력해주세요'),
             SizedBox(height: 20),
-            _buildTextField(_usernameController, '아이디를 입력해주세요'),
+            _buildTextField(_idController, '아이디를 입력해주세요'),
             SizedBox(height: 20),
             _buildPasswordTextField(
               _passwordController,

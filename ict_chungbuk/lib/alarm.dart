@@ -3,6 +3,10 @@ import 'homepage.dart'; // Import the HomePage class
 import 'my_page.dart'; // Import the MyPage class
 
 class AlarmPage extends StatefulWidget {
+  final String userId; // Added final modifier
+
+  AlarmPage({required this.userId}); // Initialize userId through the constructor
+
   @override
   _AlarmPageState createState() => _AlarmPageState();
 }
@@ -10,6 +14,12 @@ class AlarmPage extends StatefulWidget {
 class _AlarmPageState extends State<AlarmPage> {
   int _selectedIndex = 2;
   List<Map<String, dynamic>> alarms = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Now you can use widget.userId here if needed
+  }
 
   void _onItemTapped(int index) {
     if (index != _selectedIndex) {
@@ -20,12 +30,12 @@ class _AlarmPageState extends State<AlarmPage> {
       if (index == 0) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => HomePage()), // Navigates to HomePage
+          MaterialPageRoute(builder: (context) => HomePage(userId: widget.userId)), // Navigates to HomePage
         );
       } else if (index == 3) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => MyPage()), // Navigates to MyPage
+          MaterialPageRoute(builder: (context) => MyPage(userId: widget.userId)), // Navigates to MyPage
         );
       }
     }
@@ -109,7 +119,7 @@ class _AlarmPageState extends State<AlarmPage> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => HomePage()), // Navigate back to HomePage
+              MaterialPageRoute(builder: (context) => HomePage(userId: widget.userId)), // Navigate back to HomePage
             );
           },
         ),

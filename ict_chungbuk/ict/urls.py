@@ -1,18 +1,31 @@
 from django.urls import path
 from .views import predict
-
 from . import views
-from .views import register_user
-from .views import login_view
-from .views import find_password
+
+
+
+
 
 
 urlpatterns = [
     path('predict/', views.predict, name='predict'),
-    path('register/', views.register_user, name='register_user'),
-    path('login/', views.login_view, name='login'),
-    path('find_user_id/', views.find_user_id, name='find_user_id'), 
-    path('find_password/', find_password, name='find_password'), # Correctly configured
+    
+    path('register/', views.register_user, name='register_user'), 
+    path('user_info/<str', views.user_info, name='get_user_info'),
+    path('login_view/', views.login_view, name='login_view'),
+   path('user_info/<str:user_id>/', views.user_info, name='get_user_info'),
+   
+
+
+    path('change_password/', views.change_password, name='change_password'),
+   
+
+    path('find_password/', views.find_password, name='find_password'),
+ # Correctly configured
 ]
+
+
+
+
 
 

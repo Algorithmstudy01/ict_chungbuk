@@ -4,16 +4,21 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing.image import img_to_array, load_img
 from PIL import Image
 from django.http import JsonResponse
-from rest_framework.decorators import api_view
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
 from .models import Userlist
 from .serializers import UserlistSerializer
-from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from django.contrib.auth import authenticate
+from django.urls import path
+from django.http import HttpResponse
+from django.shortcuts import render
+import requests
+from django.http import HttpResponseNotAllowed, JsonResponse
+from django.contrib.auth import authenticate, login
+from django.middleware.csrf import get_token
+from django.views.decorators.csrf import csrf_exempt
+import json
+from django.db.models import F
+from django.contrib.auth.hashers import make_password
+
 
 
 import pytesseract
@@ -29,7 +34,6 @@ import torch
 import torchvision.transforms as transforms
 from PIL import Image
 from rest_framework.decorators import api_view
-from rest_framework.response import Response
 import pytesseract
 
 import os
@@ -40,15 +44,11 @@ from PIL import Image
 import pytesseract
 from django.shortcuts import render
 from django.http import JsonResponse
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from django.conf import settings
 from .models import Userlist
 import torch
 import torchvision
 from django.conf import settings
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
 from PIL import Image
 import torchvision.transforms as transforms
 import json
@@ -175,65 +175,74 @@ def predict(request):
         print(f"Exception occurred: {str(e)}")
         return Response({'error': str(e)}, status=500)
 
+from django.views.decorators.csrf import csrf_exempt
 
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Userlist
+from .serializers import UserlistSerializer
+# 회원가입
 @api_view(['POST'])
 def register_user(request):
     if request.method == 'POST':
-        # Get data from request
-        username = request.data.get('username', '')
-        nickname = request.data.get('nickname', '')
-        password = request.data.get('password', '')
-        location = request.data.get('location', '')
-        email = request.data.get('email', '')
+        # Extract data from request
+        data = request.data
+        nickname = data.get('nickname', '')
+        id = data.get('id', '')
+        password = data.get('password', '')
+        location = data.get('location', '')
+        email = data.get('email', '')
 
-        # Validate fields
-        if not username or not nickname or not password or not location or not email:
-            return Response({'message': 'All fields are required.'}, status=status.HTTP_400_BAD_REQUEST)
+        # Validate input data
+        if not all([nickname, id, password, location, email]):
+            return Response({'message': '모든 필드를 입력해야 합니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Check for duplicates
         if Userlist.objects.filter(nickname=nickname).exists():
             return Response({'message': '이미 사용중인 닉네임입니다.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        if Userlist.objects.filter(username=username).exists():
+        if Userlist.objects.filter(id=id).exists():
             return Response({'message': '이미 사용중인 아이디입니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
         if Userlist.objects.filter(email=email).exists():
             return Response({'message': '가입된 이메일이 존재합니다.'}, status=status.HTTP_400_BAD_REQUEST)
         
         # Serialize and save data
-        serializer = UserlistSerializer(data={
-            'username': username,
-            'nickname': nickname,
-            'password': password,
-            'location': location,
-            'email': email
-        })
-
+        serializer = UserlistSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-# views.py
 
-from django.views.decorators.csrf import csrf_exempt
+# 로그인 로직
+import json
 from django.http import JsonResponse
 from .models import Userlist
 import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import authenticate
+from .models import Userlist
+
+import json
+from django.http import JsonResponse
+from .models import Userlist
 
 @csrf_exempt
 def login_view(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            username = data.get('username')
+            id = data.get('id')
             password = data.get('password')
 
-            print(f"Received login request: Username={username}, Password={password}")
+            print(f"Received login request: ID={id}, Password={password}")
 
             # 사용자 모델에서 해당 ID로 사용자 찾기
             try:
-                user = Userlist.objects.get(username=username)
+                user = Userlist.objects.get(id=id)
             except Userlist.DoesNotExist:
                 user = None
 
@@ -256,11 +265,20 @@ def login_view(request):
     else:
         return JsonResponse({'error': '잘못된 요청입니다.'}, status=400)
 
-
-from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .models import Userlist  # Assuming this is your user model
-from .serializers import UserlistSerializer  # Your serializer
+from rest_framework.response import Response
+from .models import Userlist
+from .serializers import UserlistSerializer
+
+@api_view(['GET'])
+def user_info(request, user_id):
+    try:
+        user = Userlist.objects.get(id=user_id)
+        serializer = UserlistSerializer(user)
+        return Response(serializer.data, status=200)
+    except Userlist.DoesNotExist:
+        return Response({"message": "사용자를 찾을 수 없음"}, status=404)
+
 @api_view(['POST'])
 def find_user_id(request):
     if request.method == 'POST':
@@ -269,16 +287,13 @@ def find_user_id(request):
             try:
                 user = Userlist.objects.get(email=email)
                 serializer = UserlistSerializer(user)
-                return Response({"username": serializer.data['username']}, status=200)
+                return JsonResponse({"id": serializer.data['id']}, status=200)
             except Userlist.DoesNotExist:
-                return Response({"message": "일치하는 사용자가 없습니다."}, status=400)
+                return JsonResponse({"message": "일치하는 사용자가 없습니다."}, status=400)
         else:
-            return Response({"message": "이메일을 입력해주세요."}, status=400)
+            return JsonResponse({"message": "이메일을 입력해주세요."}, status=400)
 
 # 비밀번호 찾기from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from .models import Userlist  # Adjust according to your user model
-from .serializers import UserlistSerializer  # Adjust according to your serializer
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -287,26 +302,33 @@ from .serializers import UserlistSerializer  # Adjust according to your serializ
 
 @api_view(['POST'])
 def find_password(request):
-    username = request.data.get('username', None)
+    id = request.data.get('id', None)
     email = request.data.get('email', None)
 
-    if not username or not email:
+    if not id or not email:
         return Response({"message": "아이디와 이메일을 입력해주세요."}, status=400)
 
     try:
-        user = Userlist.objects.get(username=username, email=email)
+        user = Userlist.objects.get(id=id, email=email)
         return Response({"password": user.password}, status=200)
     except Userlist.DoesNotExist:
         return Response({"message": "일치하는 사용자가 없습니다."}, status=400)
 
-# 비밀번호 업데이트 
-@api_view(['PUT'])
-def update_password(request):
-    if request.method == 'PUT':
-        user_id = request.data.get('id', None)
-        new_password = request.data.get('password', None)
-        if user_id and new_password:
+
+
+
+# 업데이트 비밀번호
+@api_view(['POST'])
+def change_password(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        user_id = data.get('id')
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
+
+        if user_id and current_password and new_password:
             try:
+                # 사용자 확인
                 user = Userlist.objects.get(id=user_id)
                 user.password = new_password
                 user.save()
