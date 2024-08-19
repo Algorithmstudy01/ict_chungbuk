@@ -255,3 +255,63 @@ def login_view(request):
             return JsonResponse({'error': '서버 오류가 발생했습니다.'}, status=500)
     else:
         return JsonResponse({'error': '잘못된 요청입니다.'}, status=400)
+
+
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from .models import Userlist  # Assuming this is your user model
+from .serializers import UserlistSerializer  # Your serializer
+@api_view(['POST'])
+def find_user_id(request):
+    if request.method == 'POST':
+        email = request.data.get('email', None)
+        if email:
+            try:
+                user = Userlist.objects.get(email=email)
+                serializer = UserlistSerializer(user)
+                return Response({"username": serializer.data['username']}, status=200)
+            except Userlist.DoesNotExist:
+                return Response({"message": "일치하는 사용자가 없습니다."}, status=400)
+        else:
+            return Response({"message": "이메일을 입력해주세요."}, status=400)
+
+# 비밀번호 찾기from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import Userlist  # Adjust according to your user model
+from .serializers import UserlistSerializer  # Adjust according to your serializer
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import Userlist  # Adjust according to your user model
+from .serializers import UserlistSerializer  # Adjust according to your serializer
+
+@api_view(['POST'])
+def find_password(request):
+    username = request.data.get('username', None)
+    email = request.data.get('email', None)
+
+    if not username or not email:
+        return Response({"message": "아이디와 이메일을 입력해주세요."}, status=400)
+
+    try:
+        user = Userlist.objects.get(username=username, email=email)
+        return Response({"password": user.password}, status=200)
+    except Userlist.DoesNotExist:
+        return Response({"message": "일치하는 사용자가 없습니다."}, status=400)
+
+# 비밀번호 업데이트 
+@api_view(['PUT'])
+def update_password(request):
+    if request.method == 'PUT':
+        user_id = request.data.get('id', None)
+        new_password = request.data.get('password', None)
+        if user_id and new_password:
+            try:
+                user = Userlist.objects.get(id=user_id)
+                user.password = new_password
+                user.save()
+                return Response({"message": "비밀번호가 성공적으로 업데이트되었습니다."}, status=200)
+            except Userlist.DoesNotExist:
+                return Response({"message": "일치하는 사용자가 없습니다."}, status=400)
+        else:
+            return Response({"message": "ID와 새로운 비밀번호를 모두 제공해주세요."}, status=400)
