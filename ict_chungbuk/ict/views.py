@@ -337,3 +337,64 @@ def change_password(request):
                 return Response({"message": "일치하는 사용자가 없습니다."}, status=400)
         else:
             return Response({"message": "ID와 새로운 비밀번호를 모두 제공해주세요."}, status=400)
+
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .serializers import FamilyMemberSerializer
+from .models import Userlist, FamilyMember
+
+@api_view(['POST'])
+def add_family_member(request, user_id):
+    try:
+        user = Userlist.objects.get(id=user_id)
+    except Userlist.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = FamilyMemberSerializer(data=request.data)
+    if serializer.is_valid():
+        family_member = serializer.save(user=user)
+        return Response({'message': 'Family member added successfully'}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Alarm
+from .serializers import AlarmSerializer
+
+class UpdateAlarmView(APIView):
+    def put(self, request, pk):
+        try:
+            alarm = Alarm.objects.get(pk=pk)
+        except Alarm.DoesNotExist:
+            return Response({'error': 'Alarm not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = AlarmSerializer(alarm, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+from django.http import JsonResponse
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Alarm
+from .serializers import AlarmSerializer
+
+@api_view(['POST'])
+def create_alarm(request):
+    serializer = AlarmSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+def list_alarms(request, user_id):
+    alarms = Alarm.objects.filter(user_id=user_id)
+    serializer = AlarmSerializer(alarms, many=True)
+    return Response(serializer.data)

@@ -133,13 +133,7 @@ class _MyPageState extends State<MyPage> {
                 );
               },
             ),
-            ListTile(
-              title: Text("이메일 변경"),
-              trailing: Icon(Icons.chevron_right),
-              onTap: () {
-                // Navigate to 이메일 변경 screen
-              },
-            ),
+            
             ListTile(
               title: Text("가족 등록하기"),
               trailing: Icon(Icons.chevron_right),

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'homepage.dart'; // Import the HomePage class
-import 'my_page.dart'; // Import the MyPage class
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'homepage.dart';
+import 'my_page.dart';
 
 class AlarmPage extends StatefulWidget {
-  final String userId; // Added final modifier
+  final String userId;
 
-  AlarmPage({required this.userId}); // Initialize userId through the constructor
+  AlarmPage({required this.userId});
 
   @override
   _AlarmPageState createState() => _AlarmPageState();
@@ -15,12 +17,13 @@ class _AlarmPageState extends State<AlarmPage> {
   int _selectedIndex = 2;
   List<Map<String, dynamic>> alarms = [];
 
-  @override
-  void initState() {
-    super.initState();
-    // Now you can use widget.userId here if needed
-  }
+@override
+void initState() {
+  super.initState();
+  _fetchAlarms(); // 페이지 로드 시 알람 목록 가져오기
+}
 
+  @override
   void _onItemTapped(int index) {
     if (index != _selectedIndex) {
       setState(() {
@@ -30,34 +33,118 @@ class _AlarmPageState extends State<AlarmPage> {
       if (index == 0) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => HomePage(userId: widget.userId)), // Navigates to HomePage
+          MaterialPageRoute(builder: (context) => HomePage(userId: widget.userId)),
         );
       } else if (index == 3) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => MyPage(userId: widget.userId)), // Navigates to MyPage
+          MaterialPageRoute(builder: (context) => MyPage(userId: widget.userId)),
         );
       }
     }
   }
+Future<void> _fetchAlarms() async {
+  final url = 'http://10.0.2.2:8000/alarms/${widget.userId}/'; // Ensure correct port
+  try {
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final List<dynamic> responseData = json.decode(response.body);
+      setState(() {
+        alarms = responseData.map((item) {
+          // Ensure days field is converted to List<String>
+          return {
+            'id': item['id'],
+            'user_id': item['user_id'],
+            'time': item['time'],
+            'days': List<String>.from(item['days']),
+          };
+        }).toList();
+      });
+      print('Fetched alarms: $alarms'); // 디버깅을 위한 출력
+    } else {
+      print('Failed to load alarms. Status code: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Error fetching alarms: $e');
+  }
+}
 
-  void _addNewAlarm() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlarmSettingModal(
-          onSave: (time, days) {
-            setState(() {
-              alarms.add({
+
+
+
+Future<void> _updateAlarm(int index, String time, List<String> days) async {
+  final alarm = alarms[index];
+  final alarmId = alarm['id'];
+
+  // alarmId가 null인지 확인
+  if (alarmId == null) {
+    print('Error: alarmId is null');
+    return;
+  }
+
+  final url = 'http://10.0.2.2:8000/alarms/update/$alarmId/';
+  try {
+    final response = await http.put(
+      Uri.parse(url),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, dynamic>{
+        'time': time,
+        'days': days,
+      }),
+    );
+    if (response.statusCode == 200) {
+      _fetchAlarms(); // 성공 시 알람 목록 새로고침
+    } else {
+      print('Failed to update alarm. Status code: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Error updating alarm: $e');
+  }
+}
+
+
+
+
+Future<void> _addNewAlarm() async {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlarmSettingModal(
+        onSave: (time, days) async {
+          final url = 'http://10.0.2.2:8000/alarms/create/'; // Django URL
+          try {
+            final response = await http.post(
+              Uri.parse(url),
+              headers: <String, String>{
+                'Content-Type': 'application/json; charset=UTF-8',
+              },
+              body: jsonEncode(<String, dynamic>{
+                'user_id': widget.userId,
                 'time': time,
                 'days': days,
-              });
-            });
-          },
-        );
-      },
-    );
-  }
+              }),
+            );
+            if (response.statusCode == 201) {
+              _fetchAlarms();
+            } else {
+              print('Failed to create alarm. Status code: ${response.statusCode}');
+            }
+          } catch (e) {
+            print('Error creating alarm: $e');
+          }
+        },
+      );
+    },
+  );
+}
+
+
+
+
+
+
 
   void _showOptionsMenu(BuildContext context, int index) {
     showModalBottomSheet(
@@ -83,43 +170,40 @@ class _AlarmPageState extends State<AlarmPage> {
     );
   }
 
-  void _editAlarm(BuildContext context, int index) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlarmSettingModal(
-          onSave: (time, days) {
-            setState(() {
-              alarms[index] = {
-                'time': time,
-                'days': days,
-              };
-            });
-          },
-        );
-      },
-    );
-  }
+
+
+void _editAlarm(BuildContext context, int index) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlarmSettingModal(
+        onSave: (time, days) {
+          _updateAlarm(index, time, days);
+        },
+      );
+    },
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 4, // Add elevation to create a shadow effect
+        elevation: 4,
         title: Text(
           '알림 설정',
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
-        shadowColor: Colors.grey.withOpacity(0.5), // Set shadow color
+        shadowColor: Colors.grey.withOpacity(0.5),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => HomePage(userId: widget.userId)), // Navigate back to HomePage
+              MaterialPageRoute(builder: (context) => HomePage(userId: widget.userId)),
             );
           },
         ),
@@ -135,7 +219,7 @@ class _AlarmPageState extends State<AlarmPage> {
               onTap: () => _showOptionsMenu(context, index),
               child: AlarmCard(
                 activeDays: alarm['days'],
-                time: alarm['time'],
+                time: alarm['time'], id: '',
               ),
             ),
           );
@@ -195,6 +279,7 @@ class _AlarmPageState extends State<AlarmPage> {
     );
   }
 }
+
 
 class AlarmSettingModal extends StatefulWidget {
   final Function(String, List<String>) onSave;
@@ -275,20 +360,19 @@ class _AlarmSettingModalState extends State<AlarmSettingModal> {
       ],
     );
   }
-}
-
-class AlarmCard extends StatelessWidget {
+}class AlarmCard extends StatelessWidget {
   final List<String> activeDays;
   final String time;
+  final String id; // id 필드 추가
 
-  AlarmCard({required this.activeDays, required this.time});
+  AlarmCard({required this.activeDays, required this.time, required this.id}); // id 매개변수 추가
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: Colors.grey[400], // Grey background color
+        color: Colors.grey[400],
         borderRadius: BorderRadius.circular(8.0),
       ),
       child: Row(
@@ -316,10 +400,10 @@ class AlarmCard extends StatelessWidget {
           ),
           Spacer(),
           Column(
-            crossAxisAlignment: CrossAxisAlignment.start, // Aligns text to the left of the image
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Image.asset(
-                'assets/pill_icon.png', // Replace with the path to your image asset
+                'assets/pill_icon.png',
                 width: 50,
                 height: 50,
               ),
@@ -328,14 +412,14 @@ class AlarmCard extends StatelessWidget {
                 '약이름',
                 style: TextStyle(
                   fontSize: 18,
-                  color: Colors.white, // Set text color to white
+                  color: Colors.white,
                 ),
               ),
               Text(
                 '용법',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.white, // Set text color to white
+                  color: Colors.white,
                 ),
               ),
             ],
@@ -345,6 +429,7 @@ class AlarmCard extends StatelessWidget {
     );
   }
 }
+
 
 class DayWithDot extends StatelessWidget {
   final String day;
