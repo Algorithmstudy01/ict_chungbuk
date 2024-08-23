@@ -398,3 +398,59 @@ def list_alarms(request, user_id):
     alarms = Alarm.objects.filter(user_id=user_id)
     serializer = AlarmSerializer(alarms, many=True)
     return Response(serializer.data)
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from .models import FavoritePill
+from .serializers import FavoritePillSerializer
+
+
+@api_view(['POST'])
+def add_favorite(request):
+    user_id = request.data.get('user_id')
+    pill_code = request.data.get('pill_code')
+    pill_name = request.data.get('pill_name')
+
+    if not user_id or not pill_code or not pill_name:
+        return Response({'error': 'Missing required fields'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = Userlist.objects.get(pk=user_id)
+        favorite, created = FavoritePill.objects.get_or_create(user=user, pill_code=pill_code)
+        if not created:
+            return Response({'error': 'Favorite already exists'}, status=status.HTTP_400_BAD_REQUEST)
+        favorite.pill_name = pill_name
+        favorite.save()
+        return Response({'message': 'Favorite added successfully'}, status=status.HTTP_201_CREATED)
+    except Userlist.DoesNotExist:
+        return Response({'error': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['POST'])
+def remove_favorite(request):
+    user_id = request.data.get('user_id')
+    pill_code = request.data.get('pill_code')
+
+    if not user_id or not pill_code:
+        return Response({'error': 'Missing required fields'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = Userlist.objects.get(pk=user_id)
+        favorite = FavoritePill.objects.filter(user=user, pill_code=pill_code)
+        if favorite.exists():
+            favorite.delete()
+            return Response({'message': 'Favorite removed successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Favorite not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Userlist.DoesNotExist:
+        return Response({'error': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+# views.py
+from django.http import JsonResponse
+from .models import FavoritePill
+from django.views import View
+
+class FavoritesView(View):
+    def get(self, request, user_id):
+        favorites = FavoritePill.objects.filter(user_id=user_id).values('pill_code', 'pill_name')
+        data = list(favorites)
+        return JsonResponse(data, safe=False)

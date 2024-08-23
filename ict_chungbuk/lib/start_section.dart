@@ -17,7 +17,7 @@ class StartSection extends StatelessWidget {
             children: [
               // Pill icon image
               Image.asset(
-                'assets/pill_icon.png', // Replace with your image asset path
+                'assets/img/pill.png', // Replace with your image asset path
                 width: 100,
                 height: 100,
               ),

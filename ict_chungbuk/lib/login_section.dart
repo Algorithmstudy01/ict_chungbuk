@@ -40,7 +40,7 @@ void _login() async {
           // 로그인 성공 시 처리
           Navigator.of(context).push(MaterialPageRoute(builder: (context) {
             // 성공 시 페이지 이동
-            return MyPage(userId: id);
+            return TabbarFrame(userId: id);
           }));
         } else {
           // 로그인 실패 시 처리

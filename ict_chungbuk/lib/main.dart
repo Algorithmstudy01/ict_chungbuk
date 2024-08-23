@@ -1,15 +1,42 @@
+import 'package:chungbuk_ict/homepage.dart';
+import 'package:chungbuk_ict/my_page.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'start_section.dart';  // Import the start section
+import 'package:permission_handler/permission_handler.dart';
+import 'package:camera/camera.dart';
+import 'Camera.dart';
 
-void main() {
+late List<CameraDescription> _cameras;
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Ensure widget binding is initialized
+  _cameras = await availableCameras();
+  
   runApp(MyApp());
+
+  if (await Permission.contacts.request().isGranted) {
+    // Either the permission was already granted before or the user just granted it.
+  }
+
+  // Request multiple permissions at once.
+  Map<Permission, PermissionStatus> statuses = await [
+    Permission.camera,
+    Permission.storage,
+  ].request();
+  print(statuses[Permission.camera]);
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: StartSection(),  // Start the app with StartSection
+    return ChangeNotifierProvider(
+      create: (context) => Camera(_cameras),  // Pass the cameras to the provider
+      child: MaterialApp(
+        home: StartSection(), // Start the app with StartSection
+      ),
     );
   }
 }

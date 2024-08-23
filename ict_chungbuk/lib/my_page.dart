@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'BookMark.dart';
 import 'Change_Password.dart'; // 비밀번호 변경 페이지
 import 'Membership_Withdrawal.dart'; // 회원탈퇴 페이지
-import 'Bookmark.dart'; // 즐겨찾기 페이지
 import 'Family_Registration.dart'; // 가족 등록 페이지
 import 'alarm.dart'; // 알림 설정 페이지
 import 'homepage.dart'; // 홈 페이지
@@ -105,10 +105,13 @@ class _MyPageState extends State<MyPage> {
               trailing: Icon(Icons.chevron_right),
               onTap: () {
                 // 즐겨찾는 알약 화면으로 이동 (Bookmark.dart 실행)
-                Navigator.push(
+               Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => BookmarkScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => BookmarkScreen(userId: widget.userId),
+                  ),
                 );
+
               },
             ),
             Container(
@@ -163,46 +166,7 @@ class _MyPageState extends State<MyPage> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white, // Set to white
-        selectedItemColor: Colors.black, // Set the selected icon color
-        unselectedItemColor: Colors.grey, // Set the unselected icon color
-        currentIndex: 3, // Highlight the "MY" tab
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => HomePage(userId: widget.userId)), // homepage.dart로 이동
-            );
-          } else if (index == 2) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => AlarmPage(userId: widget.userId)), // alarm.dart로 이동
-            );
-          } else if (index == 3) {
-            // My Page는 현재 페이지이므로 아무 작업도 하지 않음
-          }
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: '홈',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: '검색',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.alarm),
-            label: '알림 설정',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'MY',
-          ),
-        ],
-      ),
+   
     );
   }
 }

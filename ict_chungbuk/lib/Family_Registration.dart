@@ -63,15 +63,6 @@ Future<void> _submitForm() async {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => MyPage(userId: widget.userId)),
-            );
-          },
-        ),
         title: Text('가족등록'),
         backgroundColor: Colors.white,
         elevation: 4,

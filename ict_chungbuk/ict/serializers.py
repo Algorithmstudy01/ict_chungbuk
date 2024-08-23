@@ -25,3 +25,12 @@ class AlarmSerializer(serializers.ModelSerializer):
     class Meta:
         model = Alarm
         fields = ['id', 'user_id', 'time', 'days']
+
+
+from rest_framework import serializers
+from .models import FavoritePill
+
+class FavoritePillSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FavoritePill
+        fields = ['pill_code', 'pill_name']

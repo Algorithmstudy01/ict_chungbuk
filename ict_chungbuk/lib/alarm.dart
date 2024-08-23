@@ -38,7 +38,7 @@ void initState() {
       } else if (index == 3) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => MyPage(userId: widget.userId)),
+          MaterialPageRoute(builder: (context) => TabbarFrame(userId: widget.userId)),
         );
       }
     }
@@ -196,17 +196,9 @@ void _editAlarm(BuildContext context, int index) {
           '알림 설정',
           style: TextStyle(color: Colors.black),
         ),
-        centerTitle: true,
-        shadowColor: Colors.grey.withOpacity(0.5),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => HomePage(userId: widget.userId)),
-            );
-          },
-        ),
+          centerTitle: true,
+        shadowColor: Colors.grey.withOpacity(0.5), // Set shadow color
+        automaticallyImplyLeading: false,
       ),
       body: ListView.builder(
         padding: EdgeInsets.all(16.0),
@@ -250,32 +242,7 @@ void _editAlarm(BuildContext context, int index) {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.grey,
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: '홈',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: '검색',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.alarm),
-            label: '알림 설정',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'MY',
-          ),
-        ],
-      ),
+     
     );
   }
 }
@@ -403,7 +370,7 @@ class _AlarmSettingModalState extends State<AlarmSettingModal> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Image.asset(
-                'assets/pill_icon.png',
+                'assets/img/pill.png',
                 width: 50,
                 height: 50,
               ),

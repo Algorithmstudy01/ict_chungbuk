@@ -29,3 +29,13 @@ class Alarm(models.Model):
 
     def __str__(self):
         return f"Alarm for {self.user_id} at {self.time}"
+
+
+
+class FavoritePill(models.Model):
+    user = models.ForeignKey(Userlist, on_delete=models.CASCADE)
+    pill_code = models.CharField(max_length=100)
+    pill_name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.pill_name

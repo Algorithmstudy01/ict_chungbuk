@@ -1,17 +1,67 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+
 
 class BookmarkScreen extends StatefulWidget {
+  final String userId;  // Ensure this is defined
+
+  const BookmarkScreen({Key? key, required this.userId}) : super(key: key);
+
   @override
   _BookmarkScreenState createState() => _BookmarkScreenState();
 }
 
-class _BookmarkScreenState extends State<BookmarkScreen> {
+ class _BookmarkScreenState extends State<BookmarkScreen> {
   TextEditingController _searchController = TextEditingController();
+  Future<List<Map<String, String>>>? _favoritesFuture;
+  List<Map<String, String>> _allFavorites = [];
+  List<Map<String, String>> _filteredFavorites = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _favoritesFuture = fetchFavorites(widget.userId);
+    _searchController.addListener(_filterFavorites);
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<List<Map<String, String>>> fetchFavorites(String userId) async {
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:8000/favorites/$userId/'),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> data = jsonDecode(response.body);
+      List<Map<String, String>> favorites = data.map<Map<String, String>>((item) => {
+        'pillCode': item['pill_code'] as String,
+        'pillName': item['pill_name'] as String,
+      }).toList();
+      setState(() {
+        _allFavorites = favorites;
+        _filteredFavorites = favorites;
+      });
+      return favorites;
+    } else {
+      throw Exception('Failed to load favorites');
+    }
+  }
+
+  void _filterFavorites() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredFavorites = _allFavorites.where((item) {
+        final pillName = item['pillName']!.toLowerCase();
+        return pillName.contains(query);
+      }).toList();
+    });
   }
 
   @override
@@ -21,16 +71,10 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
       appBar: AppBar(
         title: Text('즐겨찾기 목록'),
         backgroundColor: Colors.white,
-        elevation: 4, // Add shadow to the AppBar
+        elevation: 4,
         centerTitle: true,
         foregroundColor: Colors.black,
-        shadowColor: Colors.grey.withOpacity(0.5), // Set shadow color
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        shadowColor: Colors.grey.withOpacity(0.5),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -39,53 +83,32 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
             _buildSearchBar(),
             SizedBox(height: 16),
             Expanded(
-              child: ListView(
-                children: [
-                  _buildBookmarkItem(),
-                  _buildBookmarkItem(),
-                  _buildBookmarkItem(),
-                ],
+              child: FutureBuilder<List<Map<String, String>>>(
+                future: _favoritesFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(child: Text('No favorites added yet.'));
+                  } else {
+                    return ListView.builder(
+                      itemCount: _filteredFavorites.length,
+                      itemBuilder: (context, index) {
+                        final favorite = _filteredFavorites[index];
+                        return _buildBookmarkItem(
+                          favorite['pillCode']!,
+                          favorite['pillName']!,
+                        );
+                      },
+                    );
+                  }
+                },
               ),
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.grey,
-        currentIndex: 3, // Set this to 3 to highlight 'MY' icon
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: '홈',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: '검색',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.alarm),
-            label: '알림 설정',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'MY',
-          ),
-        ],
-        onTap: (index) {
-          // Handle navigation if needed
-          if (index == 0) {
-            Navigator.pop(context); // Navigate back to home
-          } else if (index == 1) {
-            // Navigate to search if needed
-          } else if (index == 2) {
-            // Navigate to search list if needed
-          } else if (index == 3) {
-            // Already on MY page, do nothing
-          }
-        },
       ),
     );
   }
@@ -108,15 +131,15 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
                     decoration: InputDecoration(
                       hintText: '검색',
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 14), // Adjusting vertical padding
+                      contentPadding: EdgeInsets.symmetric(vertical: 14),
                     ),
                   ),
                 ),
                 IconButton(
                   icon: Icon(Icons.close),
                   onPressed: () {
-                    _searchController.clear(); // 텍스트 삭제
-                    setState(() {}); // UI 갱신
+                    _searchController.clear();
+                    _filterFavorites();
                   },
                 ),
               ],
@@ -127,14 +150,13 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
     );
   }
 
-  Widget _buildBookmarkItem() {
+  Widget _buildBookmarkItem(String pillCode, String pillName) {
     return Container(
       margin: EdgeInsets.symmetric(vertical: 8),
       padding: EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.purple[100], // Background color remains purple
+        color: Colors.purple[100],
         borderRadius: BorderRadius.circular(16),
-        // Removed the border property here
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,7 +164,7 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Image.asset(
-              'assets/pill_image.png', // 약 이미지 파일 경로
+              'assets/img/pill.png',
               width: 80,
               height: 80,
               fit: BoxFit.cover,
@@ -160,7 +182,7 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
                     borderRadius: BorderRadius.circular(60),
                   ),
                   child: Text(
-                    '알약 이름 :',
+                    '알약 이름 : $pillName',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
