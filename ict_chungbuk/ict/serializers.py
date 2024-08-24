@@ -24,7 +24,7 @@ from .models import Alarm
 class AlarmSerializer(serializers.ModelSerializer):
     class Meta:
         model = Alarm
-        fields = ['id', 'user_id', 'time', 'days']
+        fields = ['id', 'user_id', 'time', 'days', 'name', 'usage']
 
 
 from rest_framework import serializers

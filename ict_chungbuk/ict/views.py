@@ -54,126 +54,143 @@ import torchvision.transforms as transforms
 import json
 import os
 
-# Define the Faster R-CNN model class
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.decorators import api_view
+import torch
+import torchvision.transforms as T
+from PIL import Image
+import os
+import json
+import csv
+
+import os
+import csv
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view
+from PIL import Image
+import torchvision.transforms as T
+import torch
+import torchvision
+
 def get_model(num_classes):
     from torchvision.models.detection import FasterRCNN
     from torchvision.models.mobilenetv3 import mobilenet_v3_large
     from torchvision.models.detection.anchor_utils import AnchorGenerator
 
-    # MobileNetV3 based backbone
     backbone = mobilenet_v3_large(pretrained=True).features
     backbone.out_channels = 960
 
-    # Anchor generator
     anchor_generator = AnchorGenerator(
         sizes=((32, 64, 128, 256, 512),),
         aspect_ratios=((0.5, 1.0, 2.0),) * 5
     )
 
-    # ROI Align
     roi_pooler = torchvision.ops.MultiScaleRoIAlign(
         featmap_names=['0'], output_size=7, sampling_ratio=2
     )
 
-    # Faster R-CNN model
     model = FasterRCNN(
         backbone,
         num_classes=num_classes,
         rpn_anchor_generator=anchor_generator,
         box_roi_pool=roi_pooler
     )
-
+    
     return model
 
-# Load the model
-def load_model():
-    model = get_model(num_classes=60)
-    model_path = settings.MODEL_PATH  # Use Django settings for model path
-    try:
-        model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
-        model.eval()
-    except RuntimeError as e:
-        print(f"Error loading state dict: {e}")
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-    return model
+def find_pill_info_from_csv(predicted_category_id, csv_path):
+    with open(csv_path, mode='r', encoding='utf-8-sig') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            if int(row['category_id']) == predicted_category_id:
+                return {
+                    "제품명": row["제품명"],
+                    "품목기준코드": row["품목기준코드"],
+                    "제조/수입사": row["제조/수입사"],
+                    "이 약의 효능은 무엇입니까?": row["이 약의 효능은 무엇입니까?"],
+                    "이 약은 어떻게 사용합니까?": row["이 약은 어떻게 사용합니까?"],
+                    "이 약을 사용하기 전에 반드시 알아야 할 내용은 무엇입니까?": row["이 약을 사용하기 전에 반드시 알아야 할 내용은 무엇입니까?"],
+                    "이 약의 사용상 주의사항은 무엇입니까?": row["이 약의 사용상 주의사항은 무엇입니까?"],
+                    "이 약을 사용하는 동안 주의해야 할 약 또는 음식은 무엇입니까?": row["이 약을 사용하는 동안 주의해야 할 약 또는 음식은 무엇입니까?"],
+                    "이 약은 어떤 이상반응이 나타날 수 있습니까?": row["이 약은 어떤 이상반응이 나타날 수 있습니까?"],
+                    "이 약은 어떻게 보관해야 합니까?": row["이 약은 어떻게 보관해야 합니까?"]
+                }
+    return {}
 
-model = load_model()
-
-# Preprocess image
-def preprocess_image(image):
-    image = Image.open(image).convert("RGB")
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-    ])
-    img_tensor = transform(image).unsqueeze(0)
-    return img_tensor
-
-# Find pill information
-def find_pill_info(predicted_category_id, root_dir):
-    for folder_name in os.listdir(root_dir):
-        folder_path = os.path.join(root_dir, folder_name)
-        if os.path.isdir(folder_path):
-            for file_name in os.listdir(folder_path):
-                if file_name.endswith('.json'):
-                    json_path = os.path.join(folder_path, file_name)
-                    with open(json_path, 'r') as f:
-                        data = json.load(f)
-                        if any(cat['id'] == predicted_category_id for cat in data['categories']):
-                            pill_info = {
-                                "code": data['images'][0].get('drug_N', 'N/A'),
-                                "name": data['images'][0].get('dl_name', 'N/A'),
-                                "image_path": os.path.join(folder_path, data['images'][0].get('file_name'))
-                            }
-                            return pill_info
-    return None
-
-# Predict view function
 @api_view(['POST'])
+@csrf_exempt
 def predict(request):
-    if 'file' not in request.FILES:
-        return Response({'error': 'No file provided'}, status=400)
-    
-    image_file = request.FILES['file']
+    if 'image' not in request.FILES:
+        return JsonResponse({'error': 'No image file provided'}, status=400)
+
+    image_file = request.FILES['image']
+    image_path = '/tmp/temp_image.jpg'
     
     try:
-        # Preprocess image
-        image_tensor = preprocess_image(image_file)
+        with open(image_path, 'wb') as f:
+            for chunk in image_file.chunks():
+                f.write(chunk)
         
-        # Make prediction
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        num_classes = 54
+        model = get_model(num_classes=num_classes)
+        model.load_state_dict(torch.load('/Users/seon/Desktop/ict model/pill_detection_53_more.pth', map_location=device))
+        model.to(device)
+        
+        image = Image.open(image_path).convert("RGB")
+        transform = T.Compose([T.ToTensor()])
+        image_tensor = transform(image).unsqueeze(0).to(device)
+    except Exception as e:
+        return JsonResponse({'error': f'Error loading model or processing image: {str(e)}'}, status=500)
+
+    try:
+        model.eval()
         with torch.no_grad():
             outputs = model(image_tensor)
-            pred_scores = outputs[0]['scores'].cpu().numpy()
-            pred_labels = outputs[0]['labels'].cpu().numpy()
-
-            # Filter results
-            threshold = 0.1
-            pred_labels = pred_labels[pred_scores >= threshold]
-            pred_scores = pred_scores[pred_scores >= threshold]
-
-            if len(pred_labels) == 0:
-                return Response({'error': 'No predictions above the threshold'}, status=404)
-
-            # Get the most confident prediction
-            max_score_idx = pred_scores.argmax()
-            predicted_category_id = pred_labels[max_score_idx]
-            confidence = float(pred_scores[max_score_idx])
-
-        # Find pill information based on the predicted class
-        root_dir = settings.DATA_ROOT_DIR
-        pill_info = find_pill_info(predicted_category_id, root_dir)
         
-        if pill_info:
-            return Response({
-                'pill_info': pill_info,
-                'confidence': confidence,
-            })
-        else:
-            return Response({'error': 'Pill information not found'}, status=404)
+        threshold = 0.5
+        pred_scores = outputs[0]['scores'].cpu().numpy()
+        pred_labels = outputs[0]['labels'].cpu().numpy()
+        pred_labels = pred_labels[pred_scores >= threshold]
+        pred_scores = pred_scores[pred_scores >= threshold]
+
+        if len(pred_labels) == 0:
+            return JsonResponse({'message': 'No predictions made'}, status=200)
+
+        max_score_idx = pred_scores.argmax()
+        predicted_category_id = pred_labels[max_score_idx]
+
+        csv_path = '/Users/seon/Desktop/ict model/info.csv'
+
+        pill_info_csv = find_pill_info_from_csv(predicted_category_id, csv_path)
+
+       
+        response_data = {
+                'prediction_score': float(pred_scores[max_score_idx]),
+                'product_name': pill_info_csv.get('제품명', 'Unknown'),
+                'manufacturer': pill_info_csv.get('제조/수입사', 'Unknown'),
+                'pill_code': pill_info_csv.get('품목기준코드', 'Unknown'),
+                'efficacy': pill_info_csv.get('이 약의 효능은 무엇입니까?', 'No information'),
+                'usage': pill_info_csv.get('이 약은 어떻게 사용합니까?', 'No information'),
+                'precautions_before_use': pill_info_csv.get('이 약을 사용하기 전에 반드시 알아야 할 내용은 무엇입니까?', 'No information'),
+                'usage_precautions': pill_info_csv.get('이 약의 사용상 주의사항은 무엇입니까?', 'No information'),
+                'drug_food_interactions': pill_info_csv.get('이 약을 사용하는 동안 주의해야 할 약 또는 음식은 무엇입니까?', 'No information'),
+                'side_effects': pill_info_csv.get('이 약은 어떤 이상반응이 나타날 수 있습니까?', 'No information'),
+                'storage_instructions': pill_info_csv.get('이 약은 어떻게 보관해야 합니까?', 'No information'),
+            }
+
+           
     
     except Exception as e:
-        print(f"Exception occurred: {str(e)}")
-        return Response({'error': str(e)}, status=500)
+        return JsonResponse({'error': f'Error during prediction: {str(e)}'}, status=500)
+    finally:
+        if os.path.exists(image_path):
+            os.remove(image_path)
+
+    return JsonResponse(response_data, status=200)
 
 from django.views.decorators.csrf import csrf_exempt
 
@@ -358,12 +375,31 @@ def add_family_member(request, user_id):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.decorators import api_view
 from .models import Alarm
 from .serializers import AlarmSerializer
+from django.http import JsonResponse
 
+# 알람 생성
+@api_view(['POST'])
+def create_alarm(request):
+    serializer = AlarmSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# 특정 사용자의 알람 리스트 조회
+@api_view(['GET'])
+def list_alarms(request, user_id):
+    alarms = Alarm.objects.filter(user_id=user_id)
+    serializer = AlarmSerializer(alarms, many=True)
+    return Response(serializer.data)
+
+# 알람 수정
 class UpdateAlarmView(APIView):
     def put(self, request, pk):
         try:
@@ -377,27 +413,17 @@ class UpdateAlarmView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# 알람 삭제
+class DeleteAlarmView(APIView):
+    def delete(self, request, pk):
+        try:
+            alarm = Alarm.objects.get(pk=pk)
+        except Alarm.DoesNotExist:
+            return Response({'error': 'Alarm not found'}, status=status.HTTP_404_NOT_FOUND)
 
-from django.http import JsonResponse
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
-from .models import Alarm
-from .serializers import AlarmSerializer
+        alarm.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-@api_view(['POST'])
-def create_alarm(request):
-    serializer = AlarmSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['GET'])
-def list_alarms(request, user_id):
-    alarms = Alarm.objects.filter(user_id=user_id)
-    serializer = AlarmSerializer(alarms, many=True)
-    return Response(serializer.data)
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view

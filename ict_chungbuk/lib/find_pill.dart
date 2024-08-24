@@ -1,4 +1,4 @@
-import 'dart:convert';
+ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -10,71 +10,59 @@ import 'Camera.dart';
 import 'pill_information.dart';
 
 class FindPill extends StatefulWidget {
-  final String userId;  // Add this line
+  final String userId;
 
-  const FindPill({super.key, required this.userId});  // Modify this line
-
+  const FindPill({super.key, required this.userId});
 
   @override
   State<FindPill> createState() => _FindPill();
 }
 
 class _FindPill extends State<FindPill> with AutomaticKeepAliveClientMixin {
-  late CameraController controller;
-  XFile? _image; // Variable to store the image
-  bool _isLoading = false; // Flag to track loading state
-  String _pillCode = '';
-  String _pillName = '';
-  String _confidence = '';
-  String _extractedText = '';
+  late CameraController controller; // Use late here
+  XFile? _image;
+  bool _isLoading = false;
+  Map<String, dynamic> _pillInfo = {};
 
-  final ImagePicker picker = ImagePicker(); // Initialize ImagePicker
+  final ImagePicker picker = ImagePicker();
 
-  // Function to pick image from the gallery or camera
   Future<void> getImage(ImageSource imageSource) async {
     final XFile? pickedFile = await picker.pickImage(source: imageSource);
     if (pickedFile != null) {
       setState(() {
-        _image = XFile(pickedFile.path); // Store the picked image
-        _pillCode = '';      // Reset values for new image
-        _pillName = '';
-        _confidence = '';
-        _extractedText = '';
-        _isLoading = true;   // Start loading
+        _image = XFile(pickedFile.path);
+        _pillInfo = {};
+        _isLoading = true;
       });
 
-      await _uploadImage(File(pickedFile.path)); // Upload the image
+      await _uploadImage(File(pickedFile.path));
     }
   }
 
-  // Function to take a picture using the camera
   Future<void> _takePicture() async {
     if (!controller.value.isInitialized) {
+      print("Camera controller is not initialized.");
       return;
     }
     try {
       final XFile file = await controller.takePicture();
       setState(() {
         _image = file;
-        _pillCode = '';      // Reset values for new image
-        _pillName = '';
-        _confidence = '';
-        _extractedText = '';
-        _isLoading = true;   // Start loading
+        _pillInfo = {};
+        _isLoading = true;
       });
 
-      await _uploadImage(File(file.path)); // Upload the image
+      await _uploadImage(File(file.path));
     } catch (e) {
       print('Error taking picture: $e');
     }
   }
 
-  // Function to upload the image
   Future<void> _uploadImage(File image) async {
-    final url = Uri.parse('http://10.0.2.2:8000/predict/'); // Ensure this URL is correct
+    final url = Uri.parse('http://10.0.2.2:8000/predict/');
 
     final request = http.MultipartRequest('POST', url)
-      ..files.add(await http.MultipartFile.fromPath('file', image.path));
+      ..files.add(await http.MultipartFile.fromPath('image', image.path));
 
     try {
       final response = await request.send();
@@ -84,49 +72,51 @@ class _FindPill extends State<FindPill> with AutomaticKeepAliveClientMixin {
         final decodedData = json.decode(responseData);
 
         setState(() {
-          final pillInfo = decodedData['pill_info'];
-          _pillCode = pillInfo['code'] ?? 'Unknown';
-          _pillName = pillInfo['name'] ?? 'Unknown';
-          _confidence = decodedData['confidence']?.toString() ?? 'Unknown';
-          _extractedText = decodedData['extracted_text']?.toString() ?? 'No text found';
-          _isLoading = false; // Stop loading
+          _pillInfo = decodedData;
+          _isLoading = false;
         });
 
-        // Navigate to the InformationScreen with the extracted pill details
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => InformationScreen(
-              pillCode: _pillCode,
-              pillName: _pillName,
-              confidence: _confidence,
-              extractedText: _extractedText,
+              pillCode: _pillInfo['pill_code'] ?? 'Unknown',
+              pillName: _pillInfo['product_name'] ?? 'Unknown',
+              confidence: _pillInfo['prediction_score']?.toString() ?? 'Unknown',
               userId: widget.userId,
+              usage: _pillInfo['usage'] ?? 'No information',
+              precautionsBeforeUse: _pillInfo['precautions_before_use'] ?? 'No information',
+              usagePrecautions: _pillInfo['usage_precautions'] ?? 'No information',
+              drugFoodInteractions: _pillInfo['drug_food_interactions'] ?? 'No information',
+              sideEffects: _pillInfo['side_effects'] ?? 'No information',
+              storageInstructions: _pillInfo['storage_instructions'] ?? 'No information',
+              efficacy: _pillInfo['efficacy'] ?? 'No information', // 추가된 부분
+              manufacturer: _pillInfo['manufacturer'] ?? 'No information', // 추가된 부분
+              extractedText: '',
             ),
           ),
         );
       } else {
-        _showErrorDialog(); // Show error dialog on failure
+        _showErrorDialog('서버에서 오류가 발생했습니다.');
         setState(() {
-          _isLoading = false; // Stop loading
+          _isLoading = false;
         });
       }
     } catch (e) {
-      _showErrorDialog(); // Show error dialog on exception
+      _showErrorDialog('업로드 중 오류가 발생했습니다.');
       setState(() {
-        _isLoading = false; // Stop loading
+        _isLoading = false;
       });
     }
   }
 
-  // Function to show an error dialog
-  void _showErrorDialog() {
+  void _showErrorDialog(String message) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text('인식 실패'),
-          content: Text('사진을 다시 촬영해주세요 \n또는 사진을 다시 선택해주세요.'),
+          content: Text(message),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -141,37 +131,38 @@ class _FindPill extends State<FindPill> with AutomaticKeepAliveClientMixin {
   @override
   void initState() {
     super.initState();
-    final Cameras = Provider.of<Camera>(context, listen: false);
+    _initializeCamera();
+  }
 
-    // Ensure that the camera list is initialized before accessing
-    if (Cameras.cameras.isNotEmpty) {
-      // Initialize the camera controller
+  Future<void> _initializeCamera() async {
+    final cameras = Provider.of<Camera>(context, listen: false);
+
+    if (cameras.cameras.isNotEmpty) {
       controller = CameraController(
-        Cameras.cameras[0],
+        cameras.cameras[0],
         ResolutionPreset.max,
         enableAudio: false,
       );
 
-      controller.initialize().then((_) {
-        if (!mounted) {
-          return;
-        }
-        setState(() {
-          // Camera is initialized and ready to use
-        });
-      }).catchError((Object e) {
+      try {
+        await controller.initialize();
+        if (!mounted) return;
+        setState(() {});
+      } catch (e) {
         if (e is CameraException) {
           print("CameraController Error: ${e.code}");
+          // Optionally show an error dialog or message
         }
-      });
+      }
     } else {
       print("No cameras available");
+      // Optionally show an error dialog or message
     }
   }
 
   @override
   void dispose() {
-    controller.dispose(); // Dispose the camera controller
+    controller.dispose(); // Dispose without null check since it's late
     super.dispose();
   }
 
@@ -184,10 +175,10 @@ class _FindPill extends State<FindPill> with AutomaticKeepAliveClientMixin {
       appBar: AppBar(
         title: Text('알약 검색'),
         backgroundColor: Colors.white,
-        elevation: 4, // Add shadow to the AppBar
+        elevation: 4,
         centerTitle: true,
         foregroundColor: Colors.black,
-        shadowColor: Colors.grey.withOpacity(0.5), // Set shadow color
+        shadowColor: Colors.grey.withOpacity(0.5),
         automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
@@ -250,13 +241,13 @@ class _FindPill extends State<FindPill> with AutomaticKeepAliveClientMixin {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                 Padding(
-                    padding: EdgeInsets.all(20.0), // Add padding around the image display area
+                  Padding(
+                    padding: EdgeInsets.all(20.0),
                     child: SizedBox(
                       width: size.width * 0.7,
                       height: size.width * 0.7,
                       child: _isLoading
-                          ? CircularProgressIndicator() // Show loading indicator if loading
+                          ? CircularProgressIndicator()
                           : (_image != null
                               ? Image.file(
                                   File(_image!.path),
@@ -289,19 +280,18 @@ class _FindPill extends State<FindPill> with AutomaticKeepAliveClientMixin {
                     width: 335,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: controller.value.isInitialized ? _takePicture : null, // Only enable when camera is initialized
+                      onPressed: controller.value.isInitialized ? _takePicture : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFC42AFA),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: Text(
+                      child: const Text(
                         '촬영하기',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
                           fontSize: 18,
-                          fontFamily: 'Manrope',
+                          color: Colors.white,
                         ),
                       ),
                     ),

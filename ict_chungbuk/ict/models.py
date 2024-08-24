@@ -26,10 +26,11 @@ class Alarm(models.Model):
     user_id = models.CharField(max_length=100)
     time = models.CharField(max_length=10)  # 시간 형식에 따라 조정
     days = models.JSONField()  # 선택된 요일을 저장
+    name = models.CharField(max_length=255, blank=True, null=True)  # 알약의 이름
+    usage = models.TextField(blank=True, null=True)  # 용법
 
     def __str__(self):
-        return f"Alarm for {self.user_id} at {self.time}"
-
+        return f"Alarm for {self.user_id} at {self.time} (Pill: {self.name})"
 
 
 class FavoritePill(models.Model):

@@ -6,10 +6,10 @@ from django.urls import path
 
 
 
-from .views import  create_alarm, list_alarms,UpdateAlarmView
+from .views import  create_alarm, list_alarms,UpdateAlarmView, DeleteAlarmView
 
 urlpatterns = [
-    path('predict/', views.predict, name='predict'),
+     path('predict/', views.predict, name='predict'),  # Ensure this line exists
     path('user_info/<str:user_id>/', views.user_info, name='get_user_info'),
     path('login_view/', views.login_view, name='login_view'),
     path('register/', views.register_user, name='register_user'),
@@ -17,6 +17,7 @@ urlpatterns = [
     path('change_password/', views.change_password, name='change_password'),
     path('find_password/', views.find_password, name='find_password'),
     path('addfamilymember/<str:user_id>/', views.add_family_member, name='add_family_member'),
+    path('alarms/delete/<int:pk>/', DeleteAlarmView.as_view(), name='delete_alarm'),
     path('alarms/update/<int:pk>/', UpdateAlarmView.as_view(), name='update_alarm'),
     path('alarms/create/', create_alarm, name='create_alarm'),
     path('alarms/<str:user_id>/', list_alarms, name='list_alarms'),

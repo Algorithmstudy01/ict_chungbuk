@@ -157,10 +157,17 @@ DEFAULT_CHARSET = 'utf-8'
 APPEND_SLASH = True
 # settings.py
 
+
+
 import os
 
-# Path to the model file
-MODEL_PATH = '/Users/seon/Desktop/ict_chungbuk2/pill_detection_model_59_more.pth'
+# CSV 파일 경로 설정
+CSV_PATH = '/Users/seon/Desktop/ict model/info.csv'
 
-# Root directory where JSON files and images are stored
-DATA_ROOT_DIR = '/Users/seon/Desktop/data_59'
+# JSON 파일들이 있는 루트 디렉토리 설정
+DATA_ROOT_DIR = '/Users/seon/Desktop/ict model/data'
+
+# 모델 파일 경로 설정
+MODEL_PATH = '/Users/seon/Desktop/ict model/pill_detection_53_more.pth'
+IMAGE_ROOT_DIR = '/Users/seon/Desktop/ict model/image'
+
