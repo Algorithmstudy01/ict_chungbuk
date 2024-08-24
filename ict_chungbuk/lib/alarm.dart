@@ -340,14 +340,15 @@ class _AlarmSettingModalState extends State<AlarmSettingModal> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                 
                   Text(
-                    '시간 선택: ',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  Text(
-                    '${_selectedTime.format(context)}',
-                    style: TextStyle(color: Colors.white),
-                  ),
+  '${_selectedTime.format(context)}',
+  style: TextStyle(
+    color: Colors.white,
+    fontSize: 30.0, // 원하는 글씨 크기로 설정
+  ),
+),
+
                 ],
               ),
             ),
@@ -430,6 +431,7 @@ class _AlarmSettingModalState extends State<AlarmSettingModal> {
   }
 }
 
+
 class AlarmCard extends StatelessWidget {
   final List<String> activeDays;
   final String time;
@@ -444,75 +446,76 @@ class AlarmCard extends StatelessWidget {
     required this.name,
     required this.usage,
   });
-@override
-Widget build(BuildContext context) {
-  return Card(
-    color: Colors.grey[400],
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(10.0),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 50, // 이미지의 너비
-            height: 50, // 이미지의 높이
-            child: Image.asset(
-              'assets/img/pill.png',
-            ),
-          ),
-          SizedBox(width: 16.0), // 이미지와 텍스트 사이의 간격
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Colors.grey[400],
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(6.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Column(
               children: [
                 Text(
-                  name,
+                  time,
                   style: TextStyle(
-                    fontSize: 18,
-                    color: const Color.fromARGB(255, 6, 5, 5),
+                    fontSize: 25,
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 8.0),
-                Text(
-                  '시간: $time',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white70,
-                  ),
-                ),
-                SizedBox(height: 8.0),
-                Text(
-                  '요일: ${activeDays.join(', ')}',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white70,
-                  ),
-                ),
-                SizedBox(height: 8.0),
-                Text(
-                  '이름: $name',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white70,
-                  ),
-                ),
-                SizedBox(height: 8.0),
-                Text(
-                  '사용 용도: $usage',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white70,
+                SizedBox(height: 4.0), // 시간과 이미지 사이의 간격
+                Container(
+                  width: 65, // 이미지의 너비
+                  height: 65, // 이미지의 높이
+                  child: Image.asset(
+                    'assets/img/pill.png',
                   ),
                 ),
               ],
             ),
-          ),
-        ],
+            SizedBox(width: 16.0), // 이미지와 텍스트 사이의 간격
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    ' ${activeDays.join(', ')}',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  SizedBox(height: 8.0),
+                  Text(
+                    '약이름: $name',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  SizedBox(height: 8.0),
+                  Text(
+                    '용법: $usage',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
