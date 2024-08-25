@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:chungbuk_ict/find_pill.dart';
+import 'package:chungbuk_ict/search_history_screen.dart';
 import 'package:flutter/material.dart';
 import 'my_page.dart';
 import 'alarm.dart';
@@ -94,26 +95,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void openPillInformation() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => InformationScreen(
-          pillCode: _pillInfo['pill_code'] ?? 'Unknown',
-          pillName: _pillInfo['product_name'] ?? 'Unknown',
-          confidence: _pillInfo['prediction_score']?.toString() ?? 'Unknown',
-          userId: widget.userId,
-          usage: _pillInfo['usage'] ?? 'No information',
-          precautionsBeforeUse: _pillInfo['precautions_before_use'] ?? 'No information',
-          usagePrecautions: _pillInfo['usage_precautions'] ?? 'No information',
-          drugFoodInteractions: _pillInfo['drug_food_interactions'] ?? 'No information',
-          sideEffects: _pillInfo['side_effects'] ?? 'No information',
-          storageInstructions: _pillInfo['storage_instructions'] ?? 'No information',
-          efficacy: _pillInfo['efficacy'] ?? 'No information', // 추가된 부분
-          manufacturer: _pillInfo['manufacturer'] ?? 'No information', // 추가된 부분
-          extractedText: '',
-        ),
-      ),
-    );
+  
+ Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => SearchHistoryScreen(userId: widget.userId),
+                      ),
+                    );
+
   }
 
   @override

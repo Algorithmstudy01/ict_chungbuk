@@ -3,13 +3,13 @@ from .views import predict
 from . import views
 from django.urls import path
 
-
-
+from django.conf.urls.static import static
+from django.conf import settings
 
 from .views import  create_alarm, list_alarms,UpdateAlarmView, DeleteAlarmView
 
 urlpatterns = [
-     path('predict/', views.predict, name='predict'),  # Ensure this line exists
+    path('predict/', views.predict, name='predict'),  # Ensure this line exists
     path('user_info/<str:user_id>/', views.user_info, name='get_user_info'),
     path('login_view/', views.login_view, name='login_view'),
     path('register/', views.register_user, name='register_user'),
@@ -24,4 +24,9 @@ urlpatterns = [
     path('favorites/add/', views.add_favorite, name='add_favorite'),
     path('favorites/remove/', views.remove_favorite, name='remove_favorite'),
     path('favorites/<str:user_id>/', views.FavoritesView.as_view(), name='favorites-list'),
+     path('save_search_history/', views.save_search_history, name='save_search_history'),
+ path('get_search_history/<str:user_id>/', views.get_search_history, name='get_search_history'),
     ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])

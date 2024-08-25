@@ -34,3 +34,18 @@ class FavoritePillSerializer(serializers.ModelSerializer):
     class Meta:
         model = FavoritePill
         fields = ['pill_code', 'pill_name']
+
+
+        
+from rest_framework import serializers
+from .models import Record
+
+class SearchHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Record
+        fields = [
+            'pill_code', 'pill_name', 'confidence', 'efficacy', 'manufacturer',
+            'usage', 'precautions_before_use', 'usage_precautions',
+            'drug_food_interactions', 'side_effects', 'storage_instructions',
+            'pill_image', 'user', 'created_at','pill_info','pill_info'
+        ]

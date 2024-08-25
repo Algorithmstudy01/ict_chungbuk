@@ -1,41 +1,118 @@
- import 'dart:convert';
+import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
-
+import 'package:chungbuk_ict/pill_information.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
-import 'package:provider/provider.dart';
-import 'Camera.dart';
-import 'pill_information.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class PillInfo {
+  final String pillCode;
+  final String pillName;
+  final String confidence;
+  final String efficacy;
+  final String manufacturer;
+  final String usage;
+  final String precautionsBeforeUse;
+  final String usagePrecautions;
+  final String drugFoodInteractions;
+  final String sideEffects;
+  final String storageInstructions;
+
+  PillInfo({
+    required this.pillCode,
+    required this.pillName,
+    required this.confidence,
+    required this.efficacy,
+    required this.manufacturer,
+    required this.usage,
+    required this.precautionsBeforeUse,
+    required this.usagePrecautions,
+    required this.drugFoodInteractions,
+    required this.sideEffects,
+    required this.storageInstructions,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'pillCode': pillCode,
+      'pillName': pillName,
+      'confidence': confidence,
+      'usage': usage,
+      'precautionsBeforeUse': precautionsBeforeUse,
+      'usagePrecautions': usagePrecautions,
+      'drugFoodInteractions': drugFoodInteractions,
+      'sideEffects': sideEffects,
+      'storageInstructions': storageInstructions,
+      'efficacy': efficacy,
+      'manufacturer': manufacturer,
+    };
+  }
+
+  factory PillInfo.fromJson(Map<String, dynamic> json) {
+    return PillInfo(
+      pillCode: json['pillCode'] ?? 'Unknown',
+      pillName: json['pillName'] ?? 'Unknown',
+      confidence: json['confidence'] ?? 'Unknown',
+      usage: json['usage'] ?? 'No information',
+      precautionsBeforeUse: json['precautionsBeforeUse'] ?? 'No information',
+      usagePrecautions: json['usagePrecautions'] ?? 'No information',
+      drugFoodInteractions: json['drugFoodInteractions'] ?? 'No information',
+      sideEffects: json['sideEffects'] ?? 'No information',
+      storageInstructions: json['storageInstructions'] ?? 'No information',
+      efficacy: json['efficacy'] ?? 'No information',
+      manufacturer: json['manufacturer'] ?? 'No information',
+    );
+  }
+}
+
+
 
 class FindPill extends StatefulWidget {
   final String userId;
 
-  const FindPill({super.key, required this.userId});
+  const FindPill({Key? key, required this.userId}) : super(key: key);
 
   @override
-  State<FindPill> createState() => _FindPill();
+  State<FindPill> createState() => _FindPillState();
 }
 
-class _FindPill extends State<FindPill> with AutomaticKeepAliveClientMixin {
-  late CameraController controller; // Use late here
+class _FindPillState extends State<FindPill> with AutomaticKeepAliveClientMixin {
+  late CameraController controller;
   XFile? _image;
   bool _isLoading = false;
   Map<String, dynamic> _pillInfo = {};
 
   final ImagePicker picker = ImagePicker();
 
-  Future<void> getImage(ImageSource imageSource) async {
-    final XFile? pickedFile = await picker.pickImage(source: imageSource);
-    if (pickedFile != null) {
-      setState(() {
-        _image = XFile(pickedFile.path);
-        _pillInfo = {};
-        _isLoading = true;
-      });
+  @override
+  void initState() {
+    super.initState();
+     _pillInfo = {};
+    _initializeCamera();
+  }
 
-      await _uploadImage(File(pickedFile.path));
+  Future<void> _initializeCamera() async {
+    final cameras = await availableCameras();
+
+    if (cameras.isNotEmpty) {
+      controller = CameraController(
+        cameras[0],
+        ResolutionPreset.max,
+        enableAudio: false,
+      );
+
+      try {
+        await controller.initialize();
+        if (!mounted) return;
+        setState(() {});
+      } catch (e) {
+        print("CameraController Error: ${e.toString()}");
+      }
+    } else {
+      print("No cameras available");
     }
   }
 
@@ -58,6 +135,21 @@ class _FindPill extends State<FindPill> with AutomaticKeepAliveClientMixin {
     }
   }
 
+  Future<void> getImage(ImageSource imageSource) async {
+    final XFile? pickedFile = await picker.pickImage(source: imageSource);
+    if (pickedFile != null) {
+      setState(() {
+        _image = pickedFile;
+        _pillInfo = {};
+        _isLoading = true;
+      });
+
+      await _uploadImage(File(pickedFile.path));
+    }
+  }
+
+ 
+
   Future<void> _uploadImage(File image) async {
     final url = Uri.parse('http://10.0.2.2:8000/predict/');
 
@@ -76,10 +168,13 @@ class _FindPill extends State<FindPill> with AutomaticKeepAliveClientMixin {
           _isLoading = false;
         });
 
+        final pillInfo = PillInfo.fromJson(_pillInfo);
+        await _saveSearchHistory(pillInfo);
+
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => InformationScreen(
+          builder: (context) => InformationScreen(
               pillCode: _pillInfo['pill_code'] ?? 'Unknown',
               pillName: _pillInfo['product_name'] ?? 'Unknown',
               confidence: _pillInfo['prediction_score']?.toString() ?? 'Unknown',
@@ -110,12 +205,42 @@ class _FindPill extends State<FindPill> with AutomaticKeepAliveClientMixin {
     }
   }
 
+  Future<void> _saveSearchHistory(PillInfo pillInfo) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = widget.userId;
+
+    final response = await http.post(
+      Uri.parse('http://10.0.2.2:8000/save_search_history/'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'user_id': widget.userId,
+        'prediction_score': _pillInfo['prediction_score']?.toString() ?? 'Unknown',
+        'product_name': _pillInfo['product_name'] ?? 'Unknown',
+        'manufacturer': pillInfo.manufacturer,
+        'pill_code':  _pillInfo['pill_code'] ?? 'Unknown',
+        'efficacy': pillInfo.efficacy,
+        'usage': _pillInfo['usage'] ?? 'No information',
+        'precautions_before_use':  _pillInfo['precautions_before_use'] ?? 'No information',
+        'usage_precautions':_pillInfo['usage_precautions'] ?? 'No information',
+        'drug_food_interactions': _pillInfo['drug_food_interactions'] ?? 'No information',
+        'side_effects': _pillInfo['efficacy'] ?? 'No information', // 추가된 부분
+        'storage_instructions': _pillInfo['storage_instructions'] ?? 'No information',
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print('Search history saved successfully.');
+    } else {
+      print('Failed to save search history. Status code: ${response.statusCode}');
+    }
+  }
+
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('인식 실패'),
+          title: Text('오류'),
           content: Text(message),
           actions: [
             TextButton(
@@ -129,40 +254,8 @@ class _FindPill extends State<FindPill> with AutomaticKeepAliveClientMixin {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _initializeCamera();
-  }
-
-  Future<void> _initializeCamera() async {
-    final cameras = Provider.of<Camera>(context, listen: false);
-
-    if (cameras.cameras.isNotEmpty) {
-      controller = CameraController(
-        cameras.cameras[0],
-        ResolutionPreset.max,
-        enableAudio: false,
-      );
-
-      try {
-        await controller.initialize();
-        if (!mounted) return;
-        setState(() {});
-      } catch (e) {
-        if (e is CameraException) {
-          print("CameraController Error: ${e.code}");
-          // Optionally show an error dialog or message
-        }
-      }
-    } else {
-      print("No cameras available");
-      // Optionally show an error dialog or message
-    }
-  }
-
-  @override
   void dispose() {
-    controller.dispose(); // Dispose without null check since it's late
+    controller.dispose();
     super.dispose();
   }
 
@@ -331,4 +424,113 @@ class _FindPill extends State<FindPill> with AutomaticKeepAliveClientMixin {
 
   @override
   bool get wantKeepAlive => true;
+}
+
+
+
+ // PillInfo 클래스를 정의한 파일을 가져와야 합니다.
+
+class ImageUploadScreen extends StatefulWidget {
+  final String userId;
+
+  const ImageUploadScreen({Key? key, required this.userId}) : super(key: key);
+
+  @override
+  _ImageUploadScreenState createState() => _ImageUploadScreenState();
+}
+
+class _ImageUploadScreenState extends State<ImageUploadScreen> {
+  bool _isLoading = false;
+  late Map<String, dynamic> _pillInfo;
+
+  Future<void> _uploadImage(File image) async {
+    final url = Uri.parse('http://10.0.2.2:8000/predict/');
+
+    final request = http.MultipartRequest('POST', url)
+      ..files.add(await http.MultipartFile.fromPath('image', image.path));
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await request.send();
+
+      if (response.statusCode == 200) {
+        final responseData = await response.stream.bytesToString();
+        final decodedData = json.decode(responseData);
+
+        setState(() {
+          _pillInfo = decodedData;
+          _isLoading = false;
+        });
+
+        final pillInfo = PillInfo.fromJson(_pillInfo);
+        _saveSearchHistory(pillInfo);
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => InformationScreen(
+              pillCode: pillInfo.pillCode,
+              pillName: pillInfo.pillName,
+              confidence: pillInfo.confidence,
+              userId: widget.userId,
+              usage: pillInfo.usage,
+              precautionsBeforeUse: pillInfo.precautionsBeforeUse,
+              usagePrecautions: pillInfo.usagePrecautions,
+              drugFoodInteractions: pillInfo.drugFoodInteractions,
+              sideEffects: pillInfo.sideEffects,
+              storageInstructions: pillInfo.storageInstructions,
+              efficacy: pillInfo.efficacy,
+              manufacturer: pillInfo.manufacturer,
+              extractedText: '',
+            ),
+          ),
+        );
+      } else {
+        _showErrorDialog('서버에서 오류가 발생했습니다.');
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      _showErrorDialog('업로드 중 오류가 발생했습니다.');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('오류'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('확인'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _saveSearchHistory(PillInfo pillInfo) async {
+    // 검색 기록 저장 로직 구현 필요
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('이미지 업로드'),
+      ),
+      body: Center(
+        child: _isLoading ? CircularProgressIndicator() : Text('이미지 업로드 화면'),
+      ),
+    );
+  }
 }

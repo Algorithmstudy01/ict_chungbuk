@@ -171,3 +171,13 @@ DATA_ROOT_DIR = '/Users/seon/Desktop/ict model/data'
 MODEL_PATH = '/Users/seon/Desktop/ict model/pill_detection_53_more.pth'
 IMAGE_ROOT_DIR = '/Users/seon/Desktop/ict model/image'
 
+# settings.py
+
+# settings.py
+
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]

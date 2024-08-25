@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image
 from django.http import JsonResponse
-from .models import Userlist
+from .models import Userlist, Record
 from .serializers import UserlistSerializer
 from django.contrib.auth import authenticate
 from django.urls import path
@@ -479,3 +479,83 @@ class FavoritesView(View):
         favorites = FavoritePill.objects.filter(user_id=user_id).values('pill_code', 'pill_name')
         data = list(favorites)
         return JsonResponse(data, safe=False)
+
+# views.py
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET
+from .models import Record
+
+@csrf_exempt
+@require_GET
+
+def get_search_history(request, user_id):
+    records = Record.objects.filter(user__id=user_id)
+    data = list(records.values(
+        'pill_code', 'pill_name', 'confidence', 'efficacy', 'manufacturer',
+        'usage', 'precautions_before_use', 'usage_precautions', 'drug_food_interactions',
+        'side_effects', 'storage_instructions', 'pill_image', 'pill_info'
+    ))
+    return JsonResponse({'results': data})
+
+
+
+from django.http import JsonResponse
+import json
+
+def save_search_history(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            pill_info = data.get('pill_info')
+            user_id = data.get('user_id')
+            prediction_score = data.get('prediction_score')
+            product_name = data.get('product_name')
+            manufacturer = data.get('manufacturer')
+            pill_code = data.get('pill_code')
+            efficacy = data.get('efficacy')
+            usage = data.get('usage')
+            precautions_before_use = data.get('precautions_before_use')
+            usage_precautions = data.get('usage_precautions')
+            drug_food_interactions = data.get('drug_food_interactions')
+            side_effects = data.get('side_effects')
+            storage_instructions = data.get('storage_instructions')
+
+            # Validate the received data
+            if not all([user_id, prediction_score, product_name, manufacturer, pill_code]):
+                return JsonResponse({'status': 'error', 'message': 'Missing required fields'}, status=400)
+
+            # Fetch or create the User instance
+            try:
+                user_instance = Userlist.objects.get(pk=user_id)
+            except Userist.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
+
+            # Create a new Record entry
+            record =  Record.objects.create(
+                pill_code=pill_code,
+                pill_name=product_name,
+                confidence=prediction_score,
+                efficacy=efficacy,
+                manufacturer=manufacturer,
+                usage=usage,
+                precautions_before_use=precautions_before_use,
+                usage_precautions=usage_precautions,
+                drug_food_interactions=drug_food_interactions,
+                side_effects=side_effects,
+                storage_instructions=storage_instructions,
+                pill_image='',  # Assuming you have an image URL or path; otherwise, leave it empty
+                pill_info=pill_info,
+                user=user_instance
+            )
+            print("Record created successfully")
+            return JsonResponse({'status': 'success'})
+        
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
