@@ -1,3 +1,4 @@
+import 'package:chungbuk_ict/delete_alarm.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -13,7 +14,7 @@ class AlarmPage extends StatefulWidget {
   _AlarmPageState createState() => _AlarmPageState();
 }
 
-class _AlarmPageState extends State<AlarmPage> {
+class _AlarmPageState extends State<AlarmPage> with AutomaticKeepAliveClientMixin {
   int _selectedIndex = 2;
   List<Map<String, dynamic>> alarms = [];
 
@@ -32,7 +33,7 @@ class _AlarmPageState extends State<AlarmPage> {
       if (index == 0) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => HomePage(userId: widget.userId)),
+          MaterialPageRoute(builder: (context) => MyHomePage(userId: widget.userId)),
         );
       } else if (index == 3) {
         Navigator.push(
@@ -42,34 +43,33 @@ class _AlarmPageState extends State<AlarmPage> {
       }
     }
   }
-Future<void> _fetchAlarms() async {
-  final url = 'http://10.0.2.2:8000/alarms/${widget.userId}/'; // Ensure correct port
-  try {
-    final response = await http.get(Uri.parse(url));
-    if (response.statusCode == 200) {
-      final List<dynamic> responseData = json.decode(utf8.decode(response.bodyBytes));
-      setState(() {
-        alarms = responseData.map((item) {
-          return {
-            'id': item['id'].toString(),
-            'user_id': item['user_id'].toString(),
-            'time': item['time'].toString(),
-            'days': List<String>.from(item['days']),
-            'name': item['name'] ?? '',
-            'usage': item['usage'] ?? '',
-          };
-        }).toList();
-      });
-      print('Fetched alarms: $alarms'); // For debugging
-    } else {
-      print('Failed to load alarms. Status code: ${response.statusCode}');
+
+  Future<void> _fetchAlarms() async {
+    final url = 'http://10.0.2.2:8000/alarms/${widget.userId}/'; // Ensure correct port
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData = json.decode(utf8.decode(response.bodyBytes));
+        setState(() {
+          alarms = responseData.map((item) {
+            return {
+              'id': item['id'].toString(),
+              'user_id': item['user_id'].toString(),
+              'time': item['time'].toString(),
+              'days': List<String>.from(item['days']),
+              'name': item['name'] ?? '',
+              'usage': item['usage'] ?? '',
+            };
+          }).toList();
+        });
+        print('Fetched alarms: $alarms'); // For debugging
+      } else {
+        print('Failed to load alarms. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching alarms: $e');
     }
-  } catch (e) {
-    print('Error fetching alarms: $e');
   }
-}
-
-
 
   Future<void> _updateAlarm(int index, String time, List<String> days, String name, String usage) async {
     final alarm = alarms[index];
@@ -129,7 +129,19 @@ Future<void> _fetchAlarms() async {
     }
   }
 
-  Future<void> _addNewAlarm() async {
+    void _navigateToDeleteAlarmScreen(int index) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DeleteAlarmScreen(
+          alarm: alarms[index],
+          onDelete: () => _deleteAlarm(index),
+        ),
+      ),
+    );
+  }
+
+  void _addNewAlarm() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -164,63 +176,11 @@ Future<void> _fetchAlarms() async {
     );
   }
 
-  void _showOptionsMenu(BuildContext context, int index) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          color: Colors.grey[900], // Background color for the menu
-          padding: EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              ListTile(
-                leading: Icon(Icons.edit, color: Colors.white),
-                title: Text('편집', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(context);
-                  _editAlarm(index);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.delete, color: Colors.white),
-                title: Text('삭제', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(context);
-                  _deleteAlarm(index);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _editAlarm(int index) {
-    final alarm = alarms[index];
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlarmSettingModal(
-          initialTime: TimeOfDay(
-            hour: int.tryParse(alarm['time'].split(':')[0]) ?? 0,
-            minute: int.tryParse(alarm['time'].split(':')[1]) ?? 0,
-          ),
-          initialDays: List<String>.from(alarm['days']),
-          initialName: alarm['name'],
-          initialUsage: alarm['usage'],
-          onSave: (time, days, name, usage) {
-            _updateAlarm(index, time, days, name, usage);
-          },
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 4,
@@ -229,69 +189,101 @@ Future<void> _fetchAlarms() async {
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
-        shadowColor: Colors.grey.withOpacity(0.5), // Set shadow color
+        shadowColor: Colors.grey.withOpacity(0.5),
         automaticallyImplyLeading: false,
       ),
       body: ListView.builder(
+        padding: EdgeInsets.all(16.0),
         itemCount: alarms.length,
         itemBuilder: (context, index) {
           final alarm = alarms[index];
-          return GestureDetector(
-            onTap: () => _showOptionsMenu(context, index),
-            child: AlarmCard(
-              activeDays: List<String>.from(alarm['days']),
-              time: alarm['time'],
-              id: alarm['id'],
-              name: alarm['name'],
-              usage: alarm['usage'],
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: GestureDetector(
+              onTap: () => _showOptionsMenu(context, index),
+              child: AlarmCard(
+                activeDays: alarm['days'],
+                time: alarm['time'],
+                name: alarm['name'],
+                usage: alarm['usage'],
+              ),
             ),
           );
         },
       ),
-       floatingActionButton: Stack(
-        children: <Widget>[
-          Align(
-            alignment: Alignment.bottomRight,
-            child: FloatingActionButton(
-              onPressed: _addNewAlarm,
-              backgroundColor: Colors.purple[200],
-              child: Icon(Icons.add),
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 70),
-              child: FloatingActionButton(
-                onPressed: () {
-                  // Placeholder for future options if needed
-                },
-                backgroundColor: Colors.purple[200],
-                child: Icon(Icons.more_vert),
-              ),
-            ),
-          ),
-        ],
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addNewAlarm,
+        backgroundColor: Colors.purple[200],
+        child: Icon(Icons.add),
       ),
-     
     );
   }
+
+  void _showOptionsMenu(BuildContext context, int index) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Wrap(
+          children: [
+            ListTile(
+              leading: Icon(Icons.edit),
+              title: Text('알람 수정'),
+              onTap: () {
+                Navigator.pop(context); // Close the modal
+                _editAlarm(index);
+              },
+            ),
+             ListTile(
+              leading: Icon(Icons.delete),
+              title: Text('알람 삭제'),
+              onTap: () {
+                Navigator.pop(context); // Close the modal
+                _navigateToDeleteAlarmScreen(index);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+void _editAlarm(int index) {
+  final alarm = alarms[index];
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlarmSettingModal(
+        initialTime: alarm['time'],  // String 형태의 시간 전달
+        initialDays: List<String>.from(alarm['days']),  // 리스트 형태의 요일 전달
+        initialMedName: alarm['name'],  // 초기 약 이름 전달
+        initialInstructions: alarm['usage'],  // 초기 사용 용도 전달
+        onSave: (time, days, name, usage) {
+          _updateAlarm(index, time, days, name, usage);
+        },
+      );
+    },
+  );
 }
-    
+  @override
+  bool get wantKeepAlive => true;
+}
+
+
+
 
 class AlarmSettingModal extends StatefulWidget {
-  final Function(String time, List<String> days, String name, String usage) onSave;
-  final TimeOfDay? initialTime;
+  final Function(String, List<String>, String, String) onSave;
+  final String? initialTime;
   final List<String>? initialDays;
-  final String? initialName;
-  final String? initialUsage;
+  final String? initialMedName;
+  final String? initialInstructions;
 
-  const AlarmSettingModal({
+  AlarmSettingModal({
     required this.onSave,
     this.initialTime,
     this.initialDays,
-    this.initialName,
-    this.initialUsage,
+    this.initialMedName,
+    this.initialInstructions,
   });
 
   @override
@@ -300,221 +292,231 @@ class AlarmSettingModal extends StatefulWidget {
 
 class _AlarmSettingModalState extends State<AlarmSettingModal> {
   late TimeOfDay _selectedTime;
-  List<String> _selectedDays = [];
-  TextEditingController _nameController = TextEditingController();
-  TextEditingController _usageController = TextEditingController();
+  late List<String> _selectedDays;
+  late TextEditingController _medNameController;
+  late TextEditingController _instructionsController;
 
   @override
   void initState() {
     super.initState();
-    _selectedTime = widget.initialTime ?? TimeOfDay.now();
-    _selectedDays = widget.initialDays ?? [];
-    _nameController.text = widget.initialName ?? '';
-    _usageController.text = widget.initialUsage ?? '';
-  }
+    
+    _selectedTime = widget.initialTime != null
+        ? TimeOfDay(
+            hour: int.parse(widget.initialTime!.split(":")[0]),
+            minute: int.parse(widget.initialTime!.split(":")[1]),
+          )
+        : TimeOfDay.now();
 
-  void _selectTime() async {
-    final TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
-      initialTime: _selectedTime,
+    _selectedDays = widget.initialDays ?? ['월', '화', '수', '목', '금'];
+    
+    _medNameController = TextEditingController(
+      text: widget.initialMedName ?? '',
     );
-    if (pickedTime != null && pickedTime != _selectedTime) {
-      setState(() {
-        _selectedTime = pickedTime;
-      });
-    }
+    
+    _instructionsController = TextEditingController(
+      text: widget.initialInstructions ?? '',
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: Colors.grey[900],
-      title: Text('알람 설정', style: TextStyle(color: Colors.white)),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          GestureDetector(
-            onTap: _selectTime,
-            child: Container(
-              padding: EdgeInsets.symmetric(vertical: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                 
-                  Text(
-  '${_selectedTime.format(context)}',
-  style: TextStyle(
-    color: Colors.white,
-    fontSize: 30.0, // 원하는 글씨 크기로 설정
-  ),
-),
-
-                ],
+      backgroundColor: Colors.black,
+      title: Center(
+        child: Text(
+          '알람 설정',
+          style: TextStyle(fontSize: 24, color: Colors.white),
+        ),
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            GestureDetector(
+              onTap: () async {
+                TimeOfDay? picked = await showTimePicker(
+                  context: context,
+                  initialTime: _selectedTime,
+                );
+                if (picked != null) {
+                  setState(() {
+                    _selectedTime = picked;
+                  });
+                }
+              },
+              child: Text(
+                _selectedTime.format(context),
+                style: TextStyle(fontSize: 48, color: Colors.white),
               ),
             ),
-          ),
-          SizedBox(height: 8.0),
-          TextField(
-            controller: _nameController,
-            style: TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              labelText: '이름',
-              labelStyle: TextStyle(color: Colors.white70),
-              border: OutlineInputBorder(),
+            SizedBox(height: 16),
+            Wrap(
+              spacing: 8.0,
+              children: ['일', '월', '화', '수', '목', '금', '토'].map((day) {
+                bool isSelected = _selectedDays.contains(day);
+                return ChoiceChip(
+                  label: Text(day),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    setState(() {
+                      if (selected) {
+                        _selectedDays.add(day);
+                      } else {
+                        _selectedDays.remove(day);
+                      }
+                    });
+                  },
+                );
+              }).toList(),
             ),
-          ),
-          SizedBox(height: 8.0),
-          TextField(
-            controller: _usageController,
-            style: TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              labelText: '사용 용도',
-              labelStyle: TextStyle(color: Colors.white70),
-              border: OutlineInputBorder(),
+            SizedBox(height: 16),
+            TextField(
+              controller: _medNameController,
+              decoration: InputDecoration(
+                labelText: '약 이름',
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              style: TextStyle(color: Colors.white),
             ),
-          ),
-          SizedBox(height: 16.0),
-          Wrap(
-            spacing: 8.0,
-            children: [
-              _buildDayChip('월', '월'),
-              _buildDayChip('화', '화'),
-              _buildDayChip('수', '수'),
-              _buildDayChip('목', '목'),
-              _buildDayChip('금', '금'),
-              _buildDayChip('토', '토'),
-              _buildDayChip('일', '일'),
-            ],
-          ),
-        ],
-      ),
-      actions: <Widget>[
-        TextButton(
-          child: Text('취소', style: TextStyle(color: Colors.white)),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
+            SizedBox(height: 8),
+            TextField(
+              controller: _instructionsController,
+              decoration: InputDecoration(
+                labelText: '용법',
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
         ),
+      ),
+      actions: [
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.purple[200]),
-          child: Text('저장'),
           onPressed: () {
-            final formattedTime = _selectedTime.format(context);
-            final days = _selectedDays;
-            final name = _nameController.text;
-            final usage = _usageController.text;
-            widget.onSave(formattedTime, days, name, usage);
-            Navigator.of(context).pop();
+            final String formattedTime =
+                '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}';
+            widget.onSave(
+              formattedTime,
+              _selectedDays,
+              _medNameController.text,
+              _instructionsController.text,
+            );
+            Navigator.pop(context);
           },
+          child: Text('확인'),
         ),
       ],
     );
   }
-
-  Widget _buildDayChip(String label, String day) {
-    final isSelected = _selectedDays.contains(day);
-    return FilterChip(
-      label: Text(label, style: TextStyle(color: isSelected ? Color.fromARGB(255, 149, 142, 142) : Colors.white)),
-      selected: isSelected,
-      onSelected: (bool selected) {
-        setState(() {
-          if (selected) {
-            _selectedDays.add(day);
-          } else {
-            _selectedDays.remove(day);
-          }
-        });
-      },
-      selectedColor: Colors.purple[200],
-      backgroundColor: Colors.grey[800],
-    );
-  }
 }
-
 
 class AlarmCard extends StatelessWidget {
   final List<String> activeDays;
   final String time;
-  final String id;
   final String name;
   final String usage;
 
   const AlarmCard({
     required this.activeDays,
     required this.time,
-    required this.id,
     required this.name,
     required this.usage,
   });
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.grey[400], // Grey background color
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Row(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                time,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Row(
+                children: [
+                  for (var day in ['월', '화', '수', '목', '금', '토', '일'])
+                    DayWithDot(
+                      day: day,
+                      isActive: activeDays.contains(day),
+                    ),
+                ],
+              ),
+            ],
+          ),
+          Spacer(),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start, // Aligns text to the left of the image
+            children: [
+              Image.asset(
+                'assets/img/pill.png', // Replace with the path to your image asset
+                width: 50,
+                height: 50,
+              ),
+              SizedBox(height: 8),
+              Text(
+                name,
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.white, // Set text color to white
+                ),
+              ),
+              Text(
+                usage,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white, // Set text color to white
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class DayWithDot extends StatelessWidget {
+  final String day;
+  final bool isActive;
+
+  DayWithDot({required this.day, required this.isActive});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: Colors.grey[400],
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(6.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Column(
-              children: [
-                Text(
-                  time,
-                  style: TextStyle(
-                    fontSize: 25,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 4.0), // 시간과 이미지 사이의 간격
-                Container(
-                  width: 65, // 이미지의 너비
-                  height: 65, // 이미지의 높이
-                  child: Image.asset(
-                    'assets/img/pill.png',
-                  ),
-                ),
-              ],
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.0),
+      child: Column(
+        children: [
+          if (isActive)
+            Icon(
+              Icons.circle,
+              size: 6, // Smaller dot size
+              color: Colors.purple,
             ),
-            SizedBox(width: 16.0), // 이미지와 텍스트 사이의 간격
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    ' ${activeDays.join(', ')}',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white70,
-                    ),
-                  ),
-                  SizedBox(height: 8.0),
-                  Text(
-                    '약이름: $name',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white70,
-                    ),
-                  ),
-                  SizedBox(height: 8.0),
-                  Text(
-                    '용법: $usage',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ],
-              ),
+          Text(
+            day,
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.white,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

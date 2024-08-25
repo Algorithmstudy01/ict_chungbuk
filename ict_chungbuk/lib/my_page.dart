@@ -93,13 +93,7 @@ class _MyPageState extends State<MyPage> {
               color: Colors.grey[300], // Thicker separator color
               height: 8, // Increase height to make it thicker
             ),
-            ListTile(
-              title: Text("알약 검색 기록"),
-              trailing: Icon(Icons.chevron_right),
-              onTap: () {
-                // Navigate to 알약 검색 기록 screen
-              },
-            ),
+           
             ListTile(
               title: Text("즐겨찾는 알약"),
               trailing: Icon(Icons.chevron_right),
@@ -118,13 +112,7 @@ class _MyPageState extends State<MyPage> {
               color: Colors.grey[300], // Thicker separator color
               height: 8, // Increase height to make it thicker
             ),
-            ListTile(
-              title: Text("개인정보 수정"),
-              trailing: Icon(Icons.chevron_right),
-              onTap: () {
-                // Navigate to 개인정보 수정 screen
-              },
-            ),
+         
             ListTile(
               title: Text("비밀번호 변경"),
               trailing: Icon(Icons.chevron_right),

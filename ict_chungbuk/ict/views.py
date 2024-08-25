@@ -1,7 +1,6 @@
 import json
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.preprocessing.image import img_to_array, load_img
 from PIL import Image
 from django.http import JsonResponse
 from .models import Userlist
