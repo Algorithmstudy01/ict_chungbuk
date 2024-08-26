@@ -36,7 +36,7 @@ class FavoritePillSerializer(serializers.ModelSerializer):
         fields = ['pill_code', 'pill_name']
 
 
-        
+
 from rest_framework import serializers
 from .models import Record
 
@@ -49,3 +49,4 @@ class SearchHistorySerializer(serializers.ModelSerializer):
             'drug_food_interactions', 'side_effects', 'storage_instructions',
             'pill_image', 'user', 'created_at','pill_info','pill_info'
         ]
+

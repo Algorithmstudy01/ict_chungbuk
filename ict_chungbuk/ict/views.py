@@ -426,57 +426,123 @@ class DeleteAlarmView(APIView):
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .models import FavoritePill
-from .serializers import FavoritePillSerializer
 
 
-@api_view(['POST'])
+
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+import json
+
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from .models import Favorite, Userlist
+import json
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from django.core.exceptions import ObjectDoesNotExist
+from .models import Favorite, Userlist
+import json
+
+@csrf_exempt
+@require_POST
 def add_favorite(request):
-    user_id = request.data.get('user_id')
-    pill_code = request.data.get('pill_code')
-    pill_name = request.data.get('pill_name')
-
-    if not user_id or not pill_code or not pill_name:
-        return Response({'error': 'Missing required fields'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        data = json.loads(request.body)
+        user_id = data['user_id']
+        pill_code = data['pill_code']
+        pill_name = data['pill_name']
+        confidence = data['confidence']
+        efficacy = data['efficacy']
+        manufacturer = data['manufacturer']
+        usage = data['usage']
+        precautions_before_use = data['precautions_before_use']
+        usage_precautions = data['usage_precautions']
+        drug_food_interactions = data['drug_food_interactions']
+        side_effects = data['side_effects']
+        storage_instructions = data['storage_instructions']
+        pill_image = data['pill_image']
+        pill_info = data['pill_info']
+        
+    except (KeyError, json.JSONDecodeError):
+        return JsonResponse({'error': 'Invalid data'}, status=400)
 
     try:
-        user = Userlist.objects.get(pk=user_id)
-        favorite, created = FavoritePill.objects.get_or_create(user=user, pill_code=pill_code)
-        if not created:
-            return Response({'error': 'Favorite already exists'}, status=status.HTTP_400_BAD_REQUEST)
-        favorite.pill_name = pill_name
-        favorite.save()
-        return Response({'message': 'Favorite added successfully'}, status=status.HTTP_201_CREATED)
+        user = Userlist.objects.get(id=user_id)
     except Userlist.DoesNotExist:
-        return Response({'error': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({'error': 'User not found'}, status=404)
 
-@api_view(['POST'])
+    # Check if the favorite already exists
+    if Favorite.objects.filter(user=user, pill_code=pill_code).exists():
+        return JsonResponse({'message': 'Favorite already exists'}, status=409)  # Conflict
+
+    # Create a new favorite entry
+    Favorite.objects.create(
+        user=user,
+        pill_code=pill_code,
+        pill_name=pill_name,
+        confidence=confidence,
+        efficacy=efficacy,
+        manufacturer=manufacturer,
+        usage=usage,
+        precautions_before_use=precautions_before_use,
+        usage_precautions=usage_precautions,
+        drug_food_interactions=drug_food_interactions,
+        side_effects=side_effects,
+        storage_instructions=storage_instructions,
+        pill_image=pill_image,
+        pill_info=pill_info,
+    )
+
+    return JsonResponse({'message': 'Favorite added successfully'}, status=201)
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from .models import Favorite  # Adjust the import according to your project structure
+
+@require_POST
 def remove_favorite(request):
-    user_id = request.data.get('user_id')
-    pill_code = request.data.get('pill_code')
-
-    if not user_id or not pill_code:
-        return Response({'error': 'Missing required fields'}, status=status.HTTP_400_BAD_REQUEST)
-
+    # Parse the request body
     try:
-        user = Userlist.objects.get(pk=user_id)
-        favorite = FavoritePill.objects.filter(user=user, pill_code=pill_code)
-        if favorite.exists():
-            favorite.delete()
-            return Response({'message': 'Favorite removed successfully'}, status=status.HTTP_200_OK)
+        data = json.loads(request.body)
+        user_id = data['user_id']
+        pill_code = data['pill_code']
+    except (KeyError, json.JSONDecodeError):
+        return JsonResponse({'error': 'Invalid data'}, status=400)
+
+    # Retrieve the user and delete the favorite
+    try:
+        user = Userlist.objects.get(id=user_id)
+        favorites = Favorite.objects.filter(user=user, pill_code=pill_code)
+        if favorites.exists():
+            favorites.delete()
+            return JsonResponse({'message': 'Favorite removed successfully'}, status=200)
         else:
-            return Response({'error': 'Favorite not found'}, status=status.HTTP_404_NOT_FOUND)
-    except Userlist.DoesNotExist:
-        return Response({'error': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({'error': 'Favorite not found'}, status=404)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=404)
 
 # views.py
 from django.http import JsonResponse
-from .models import FavoritePill
+
+from django.views import View
+from django.http import JsonResponse
+from django.views import View
+from django.http import JsonResponse
+from .models import Favorite
 from django.views import View
 
 class FavoritesView(View):
     def get(self, request, user_id):
-        favorites = FavoritePill.objects.filter(user_id=user_id).values('pill_code', 'pill_name')
+        favorites = Favorite.objects.filter(user_id=user_id).values(
+            'pill_code', 'pill_name', 'confidence', 'efficacy', 'manufacturer', 
+            'usage', 'precautions_before_use', 'usage_precautions', 
+            'drug_food_interactions', 'side_effects', 'storage_instructions', 
+            'pill_image', 'pill_info', 'created_at'
+        )
         data = list(favorites)
         return JsonResponse(data, safe=False)
 

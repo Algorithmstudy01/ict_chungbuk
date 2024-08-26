@@ -3,14 +3,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:chungbuk_ict/BookMark.dart';
-
-
-
-import 'dart:convert';
-import 'package:chungbuk_ict/pill_information.dart';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'find_pill.dart'; // Ensure this file has the necessary imports
+import 'package:chungbuk_ict/pill_information.dart';  // 필요한 경우만 import
 
 class SearchHistoryScreen extends StatefulWidget {
   final String userId;
@@ -23,7 +16,6 @@ class SearchHistoryScreen extends StatefulWidget {
 
 class _SearchHistoryScreenState extends State<SearchHistoryScreen> {
   late Future<List<PillInfo>> _searchHistory;
-  
 
   @override
   void initState() {
@@ -31,26 +23,26 @@ class _SearchHistoryScreenState extends State<SearchHistoryScreen> {
     _searchHistory = _fetchSearchHistory();
   }
 
-Future<List<PillInfo>> _fetchSearchHistory() async {
-  final response = await http.get(Uri.parse('http://10.0.2.2:8000/get_search_history/${widget.userId}'));
-  print('Response status: ${response.statusCode}');
-  print('Response body: ${response.body}'); // Add this line to check the raw response
+  Future<List<PillInfo>> _fetchSearchHistory() async {
+    final response = await http.get(Uri.parse('http://10.0.2.2:8000/get_search_history/${widget.userId}'));
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}'); // Add this line to check the raw response
 
-  if (response.statusCode == 200) {
-    final Map<String, dynamic> data = json.decode(response.body);
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
 
-    if (data['results'] != null) {
-      final List<dynamic> results = data['results'];
-      return results.map((json) => PillInfo.fromJson(json)).toList();
+      if (data['results'] != null) {
+        final List<dynamic> results = data['results'];
+        return results.map((json) => PillInfo.fromJson(json)).toList();
+      } else {
+        return [];
+      }
     } else {
-      return [];
+      throw Exception('Failed to load search history');
     }
-  } else {
-    throw Exception('Failed to load search history');
   }
-}
 
-@override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -130,8 +122,6 @@ Future<List<PillInfo>> _fetchSearchHistory() async {
   }
 }
 
-
-
 class InformationScreen extends StatefulWidget {
   final String pillCode;
   final String pillName;
@@ -181,55 +171,85 @@ class _InformationScreenState extends State<InformationScreen> {
   }
 
   void _checkFavorite() async {
-    // 기존의 즐겨찾기 여부 확인 로직 추가
-  }
-
-  void toggleFavorite() {
-    setState(() {
-      isFavorite = !isFavorite;
-    });
-
-    if (isFavorite) {
-      addToFavorites(widget.pillCode, widget.pillName, widget.userId);
-    } else {
-      removeFromFavorites(widget.pillCode, widget.userId);
-    }
-  }
-
-  Future<void> addToFavorites(String pillCode, String pillName, String userId) async {
-    final response = await http.post(
-      Uri.parse('http://10.0.2.2:8000/favorites/add/'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'pill_code': pillCode,
-        'pill_name': pillName,
-        'user_id': userId,
-      }),
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      print('Favorite added successfully');
-    } else {
-      print('Failed to add favorite');
-    }
-  }
-
-  Future<void> removeFromFavorites(String pillCode, String userId) async {
-    final response = await http.post(
-      Uri.parse('http://10.0.2.2:8000/favorites/remove/'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'pill_code': pillCode,
-        'user_id': userId,
-      }),
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:8000/favorites/check?user_id=${widget.userId}&pill_code=${widget.pillCode}'),
     );
 
     if (response.statusCode == 200) {
-      print('Favorite removed successfully');
+      final data = jsonDecode(response.body);
+      setState(() {
+        isFavorite = data['is_favorite'];
+      });
     } else {
-      print('Failed to remove favorite');
+      print('Failed to check favorite status');
     }
   }
+void toggleFavorite() async {
+  setState(() {
+    isFavorite = !isFavorite;
+  });
+
+  if (isFavorite) {
+    // Try to add to favorites
+    await _addToFavorites();
+  } else {
+    // Try to remove from favorites
+    await _removeFromFavorites();
+  }
+}
+
+Future<void> _addToFavorites() async {
+  final response = await http.post(
+    Uri.parse('http://10.0.2.2:8000/favorites/add/'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'user_id': widget.userId,
+      'pill_code': widget.pillCode,
+      'pill_name': widget.pillName,
+      'confidence': widget.confidence,
+      'efficacy': widget.efficacy,
+      'manufacturer': widget.manufacturer,
+      'usage': widget.usage,
+      'precautions_before_use': widget.precautionsBeforeUse,
+      'usage_precautions': widget.usagePrecautions,
+      'drug_food_interactions': widget.drugFoodInteractions,
+      'side_effects': widget.sideEffects,
+      'storage_instructions': widget.storageInstructions,
+      'pill_image': '',
+      'pill_info': '',
+    }),
+  );
+
+  if (response.statusCode == 201) {
+    print('Favorite added successfully');
+  } else if (response.statusCode == 409) {
+    // Handle the case where the favorite already exists
+    print('Favorite already exists');
+  } else {
+    print('Failed to add favorite: ${response.statusCode} - ${response.body}');
+  }
+}
+
+Future<void> _removeFromFavorites() async {
+  final response = await http.post(
+    Uri.parse('http://10.0.2.2:8000/favorites/remove/'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'pill_code': widget.pillCode,
+      'user_id': widget.userId,
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    print('Favorite removed successfully');
+  } else {
+    print('Failed to remove favorite: ${response.statusCode} - ${response.body}');
+  }
+}
+
+
+
+
 
   void speak(String text) async {
     await flutterTts.speak(text);
@@ -411,8 +431,6 @@ class _InformationScreenState extends State<InformationScreen> {
     );
   }
 }
-
-
 
 class PillInfo {
   final String pillCode;

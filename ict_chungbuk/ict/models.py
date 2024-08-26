@@ -80,6 +80,7 @@ class Sear(models.Model):
     pill_info = models.TextField()  # 이 필드가 모델에 정의되어 있어야 합니다.
     created_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey('UserList', on_delete=models.CASCADE)  # ForeignKey 필드가 정확한지 확인합니다.
+
 class Record(models.Model):
     pill_code = models.CharField(max_length=255)
     pill_name = models.CharField(max_length=255)
@@ -96,3 +97,27 @@ class Record(models.Model):
     pill_info = models.TextField(null=True, blank=True)  
     created_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey('UserList', on_delete=models.CASCADE)  # ForeignKey 필드가 정확한지 확인합니다.
+
+
+
+from django.db import models
+
+class Favorite(models.Model):
+    pill_code = models.CharField(max_length=255)
+    pill_name = models.CharField(max_length=255)
+    confidence = models.CharField(max_length=255)
+    efficacy = models.TextField()
+    manufacturer = models.CharField(max_length=255)
+    usage = models.TextField()
+    precautions_before_use = models.TextField()
+    usage_precautions = models.TextField()
+    drug_food_interactions = models.TextField()
+    side_effects = models.TextField()
+    storage_instructions = models.TextField()
+    pill_image = models.TextField()
+    pill_info = models.TextField(null=True, blank=True)  
+    created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey('UserList', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.pill_name

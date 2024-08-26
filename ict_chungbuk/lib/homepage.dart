@@ -114,33 +114,42 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             Column(
-              children: [
-                Container(
-                  width: size.width * 0.3,
-                  height: size.width * 0.3,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFD9D9D9),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(43),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: size.width * 0.3,
-                  height: size.height * 0.05,
-                  child: Text(
-                    _nickname,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 28,
-                      fontFamily: 'Inter',
-                      height: 0,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+  children: [
+    Container(
+      width: size.width * 0.25,
+      height: size.width * 0.25,
+      decoration: ShapeDecoration(
+        
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(60),
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(60),
+        child: Image.asset(
+          'assets/img/user5.png', // Make sure this path is correct
+          fit: BoxFit.cover,
+        ),
+      ),
+    ),
+    SizedBox(
+      width: size.width * 0.3,
+      height: size.height * 0.05,
+      child: Text(
+        _nickname,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          color: Colors.black,
+          fontSize: 28,
+          fontFamily: 'Inter',
+          height: 0,
+        ),
+      ),
+    ),
+  ],
+),
+
+          
             Column(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -152,7 +161,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       Expanded(
                         child: IconButton(
                           onPressed: () => DefaultTabController.of(context)!.animateTo(1),
-                          icon: Image.asset('assets/img/find_pill.png'),
+                          icon: Image.asset('assets/img/find_pill2.png'),
                         ),
                       ),
                       Expanded(

@@ -1,11 +1,12 @@
+import 'package:chungbuk_ict/pill_information.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-
+// Add this import for the InformationScreen
 
 class BookmarkScreen extends StatefulWidget {
-  final String userId;  // Ensure this is defined
+  final String userId;
 
   const BookmarkScreen({Key? key, required this.userId}) : super(key: key);
 
@@ -13,7 +14,7 @@ class BookmarkScreen extends StatefulWidget {
   _BookmarkScreenState createState() => _BookmarkScreenState();
 }
 
- class _BookmarkScreenState extends State<BookmarkScreen> {
+class _BookmarkScreenState extends State<BookmarkScreen> {
   TextEditingController _searchController = TextEditingController();
   Future<List<Map<String, String>>>? _favoritesFuture;
   List<Map<String, String>> _allFavorites = [];
@@ -43,6 +44,17 @@ class BookmarkScreen extends StatefulWidget {
       List<Map<String, String>> favorites = data.map<Map<String, String>>((item) => {
         'pillCode': item['pill_code'] as String,
         'pillName': item['pill_name'] as String,
+        'confidence': item['confidence'] as String,
+        'efficacy': item['efficacy'] as String,
+        'manufacturer': item['manufacturer'] as String,
+        'usage': item['usage'] as String,
+        'precautionsBeforeUse': item['precautions_before_use'] as String,
+        'usagePrecautions': item['usage_precautions'] as String,
+        'drugFoodInteractions': item['drug_food_interactions'] as String,
+        'sideEffects': item['side_effects'] as String,
+        'storageInstructions': item['storage_instructions'] as String,
+        'pillImage': item['pill_image'] as String,
+        'pillInfo': item['pill_info'] as String? ?? '',
       }).toList();
       setState(() {
         _allFavorites = favorites;
@@ -97,10 +109,7 @@ class BookmarkScreen extends StatefulWidget {
                       itemCount: _filteredFavorites.length,
                       itemBuilder: (context, index) {
                         final favorite = _filteredFavorites[index];
-                        return _buildBookmarkItem(
-                          favorite['pillCode']!,
-                          favorite['pillName']!,
-                        );
+                        return _buildBookmarkItem(favorite);
                       },
                     );
                   }
@@ -149,67 +158,147 @@ class BookmarkScreen extends StatefulWidget {
       ],
     );
   }
-
-  Widget _buildBookmarkItem(String pillCode, String pillName) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 8),
-      padding: EdgeInsets.all(8),
+Widget _buildBookmarkItem(Map<String, String> favorite) {
+  return GestureDetector(
+    onTap: () {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => InformationScreen(
+            pillCode: favorite['pillCode']!,
+            pillName: favorite['pillName']!,
+            confidence: favorite['confidence']!,
+            userId: widget.userId,
+            usage: favorite['usage']!,
+            precautionsBeforeUse: favorite['precautionsBeforeUse']!,
+            usagePrecautions: favorite['usagePrecautions']!,
+            drugFoodInteractions: favorite['drugFoodInteractions']!,
+            sideEffects: favorite['sideEffects']!,
+            storageInstructions: favorite['storageInstructions']!,
+            efficacy: favorite['efficacy']!,
+            manufacturer: favorite['manufacturer']!,
+            extractedText: favorite['pillInfo']!,
+          ),
+        ),
+      );
+    },
+    child: Container(
+      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),  // Slightly larger margin
+      padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.purple[100],
+        color: Colors.purple[100],  // Slightly lighter background color
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(blurRadius: 4, color: Colors.grey.withOpacity(0.2))],  // Add shadow for depth
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              'assets/img/pill.png',
-              width: 80,
-              height: 80,
-              fit: BoxFit.cover,
-            ),
-          ),
-          SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: EdgeInsets.all(8.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(60),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  favorite['pillImage']!,
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Image.asset(
+                    'assets/img/pill.png',
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
                   ),
-                  child: Text(
-                    '알약 이름 : $pillName',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(width: 10),  // Slightly larger space between image and text
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(8.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [BoxShadow(blurRadius: 2, color: Colors.grey.withOpacity(0.1))],  // Shadow for text container
+                      ),
+                      child: Text(
+                        '알약 이름 : ${favorite['pillName']}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  ),
+                    SizedBox(height: 8),
+                    Container(
+                      padding: EdgeInsets.all(8.0),  // Increased padding for better readability
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [BoxShadow(blurRadius: 2, color: Colors.grey.withOpacity(0.1))],  // Shadow for text container
+                      ),
+                      child: Text(
+                        '효과 : ${favorite['efficacy']}',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 8),
-                Container(
-                  padding: EdgeInsets.all(8.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('성분 :', style: TextStyle(fontSize: 14)),
-                      SizedBox(height: 4),
-                      Text('효과 :', style: TextStyle(fontSize: 14)),
-                    ],
-                  ),
+              ),
+            ],
+          ),
+          SizedBox(height: 5),  // More space before the button
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () async {
+                await _removeFavoriteFromServer(favorite['pillCode']!);
+                // Refresh the favorites list
+                setState(() {
+                  _favoritesFuture = fetchFavorites(widget.userId);
+                });
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.black, backgroundColor: Colors.white,  // Background color
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),  // Adjust padding
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),  // Rounded corners
                 ),
-              ],
+                side: BorderSide(color: Colors.black.withOpacity(0.2)),  // Border color
+              ),
+              child: Text(
+                '삭제',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,  // Slightly bolder text
+                ),
+              ),
             ),
           ),
         ],
       ),
-    );
+    ),
+  );
+}
+
+
+Future<void> _removeFavoriteFromServer(String pillCode) async {
+  final response = await http.post(
+    Uri.parse('http://10.0.2.2:8000/favorites/remove/'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'pill_code': pillCode,
+      'user_id': widget.userId,
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    print('Favorite removed successfully');
+  } else {
+    print('Failed to remove favorite');
+    print('Status Code: ${response.statusCode}');
+    print('Response Body: ${response.body}');
   }
+}
 }
