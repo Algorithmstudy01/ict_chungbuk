@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "and_ict" "\0"
+            VALUE "FileDescription", "chungbuk_ict" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "and_ict" "\0"
+            VALUE "InternalName", "chungbuk_ict" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2024 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "and_ict.exe" "\0"
-            VALUE "ProductName", "and_ict" "\0"
+            VALUE "OriginalFilename", "chungbuk_ict.exe" "\0"
+            VALUE "ProductName", "chungbuk_ict" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

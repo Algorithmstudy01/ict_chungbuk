@@ -1,4 +1,4 @@
-# and_ict
+# chungbuk_ict
 
 A new Flutter project.
 
