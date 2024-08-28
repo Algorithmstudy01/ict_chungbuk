@@ -1,12 +1,13 @@
 import 'dart:convert';
-
+import 'package:chungbuk_ict/BookMark.dart';
 import 'package:chungbuk_ict/find_pill.dart';
-import 'package:chungbuk_ict/search_history_screen.dart';
+import 'package:chungbuk_ict/pill_information.dart';
 import 'package:flutter/material.dart';
 import 'my_page.dart';
 import 'alarm.dart';
 import 'package:http/http.dart' as http;
-import 'pill_information.dart'; // pill_information.dart 파일을 임포트
+
+
 
 class TabbarFrame extends StatelessWidget {
   final String userId;
@@ -48,8 +49,8 @@ class TabbarFrame extends StatelessWidget {
             children: [
               MyHomePage(userId: userId),
               FindPill(userId: userId),
-              AlarmPage(userId: userId), // 수정된 부분
-              MyPage(userId: userId), // 수정된 부분
+              AlarmPage(userId: userId), // 알람 페이지
+              MyPage(userId: userId), // 내 정보 페이지
             ],
           ),
         ),
@@ -69,12 +70,13 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String _nickname = '';
-  Map<String, dynamic> _pillInfo = {};
+  List<Map<String, dynamic>> _alarms = []; // 알람 목록
 
   @override
   void initState() {
     super.initState();
     _fetchNickname();
+    _fetchAlarms();
   }
 
   Future<void> _fetchNickname() async {
@@ -87,21 +89,35 @@ class _MyHomePageState extends State<MyHomePage> {
         _nickname = data['nickname'] ?? 'Unknown User';
       });
     } else {
-      // Handle error
       setState(() {
         _nickname = 'Unknown User';
       });
     }
   }
 
-  void openPillInformation() {
-  
- Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => SearchHistoryScreen(userId: widget.userId),
-                      ),
-                    );
-
+  Future<void> _fetchAlarms() async {
+    final url = 'http://10.0.2.2:8000/alarms/${widget.userId}/';
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData = json.decode(utf8.decode(response.bodyBytes));
+        setState(() {
+          _alarms = responseData.map((item) {
+            return {
+              'id': item['id'].toString(),
+              'time': item['time'].toString(),
+              'days': List<String>.from(item['days']),
+              'name': item['name'] ?? '',
+              'usage': item['usage'] ?? '',
+            };
+          }).toList();
+        });
+      } else {
+        print('Failed to load alarms. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching alarms: $e');
+    }
   }
 
   @override
@@ -114,46 +130,44 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             Column(
-  children: [
-    Container(
-      width: size.width * 0.25,
-      height: size.width * 0.25,
-      decoration: ShapeDecoration(
-        
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(60),
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(60),
-        child: Image.asset(
-          'assets/img/user5.png', // Make sure this path is correct
-          fit: BoxFit.cover,
-        ),
-      ),
-    ),
-    SizedBox(
-      width: size.width * 0.3,
-      height: size.height * 0.05,
-      child: Text(
-        _nickname,
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          color: Colors.black,
-          fontSize: 28,
-          fontFamily: 'Inter',
-          height: 0,
-        ),
-      ),
-    ),
-  ],
-),
-
-          
+              children: [
+                Container(
+                  width: size.width * 0.23,
+                  height: size.width * 0.23,
+                  decoration: ShapeDecoration(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(60),
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(60),
+                    child: Image.asset(
+                      'assets/img/user5.png',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: size.width * 0.3,
+                  height: size.height * 0.05,
+                  child: Text(
+                    _nickname,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 28,
+                      fontFamily: 'Inter',
+                      height: 0,
+                    ),
+                  ),
+                ),
+              ],
+            ),
             Column(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 SizedBox(
+                 
                   width: size.width * 0.9,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -169,13 +183,17 @@ class _MyHomePageState extends State<MyHomePage> {
                           alignment: Alignment.center,
                           children: [
                             IconButton(
-                              onPressed: openPillInformation, // 알약 기록 버튼 클릭 시 실행
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => BookmarkScreen(userId: widget.userId),
+                                ),
+                              ),
                               icon: Image.asset('assets/img/img.png'),
                             ),
                             const Text(
-                              '알약 기록',
+                              '즐겨찾기',
                               style: TextStyle(
-                                color: Colors.black, // Assuming the image has a dark background
+                                color: Colors.black,
                                 fontSize: 30,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -186,24 +204,44 @@ class _MyHomePageState extends State<MyHomePage> {
                     ],
                   ),
                 ),
-                Container(
-                  width: size.width * 0.9,
-                  height: size.height * 0.2,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFE4DDF1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(32),
-                    ),
-                    shadows: const [
-                      BoxShadow(
-                        color: Color(0x3F000000),
-                        blurRadius: 4,
-                        offset: Offset(0, 4),
-                        spreadRadius: 0,
-                      ),
-                    ],
-                  ),
-                ),
+              Container(
+  width: size.width * 0.9,
+  height: size.height * 0.25,
+  decoration: ShapeDecoration(
+    color: const Color(0xFFE4DDF1),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(32),
+    ),
+    shadows: const [
+      BoxShadow(
+        color: Color(0x3F000000),
+        blurRadius: 4,
+        offset: Offset(0, 4),
+        spreadRadius: 0,
+      ),
+    ],
+  ),
+  child: Padding(
+    padding: const EdgeInsets.all(14.0), // Adjust the padding here
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView( // Ensure scrolling if content overflows
+          child: Text(
+            '알약 복용 알림\n\n${_alarms.map((alarm) => '${alarm['days']} ${alarm['time']} ${alarm['name']}').join('\n')}',
+            textAlign: TextAlign.left,
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+            // Optionally, set maxLines and overflow if needed
+          ),
+        );
+      },
+    ),
+  ),
+),
+
               ],
             ),
           ],
