@@ -1,3 +1,4 @@
+import 'package:chungbuk_ict/pill_information.dart';
 import 'package:flutter/material.dart';
 import 'BookMark.dart';
 import 'Change_Password.dart'; // 비밀번호 변경 페이지
@@ -95,14 +96,14 @@ class _MyPageState extends State<MyPage> {
             ),
            
             ListTile(
-              title: Text("즐겨찾는 알약"),
+              title: Text("검색 기록"),
               trailing: Icon(Icons.chevron_right),
               onTap: () {
                 // 즐겨찾는 알약 화면으로 이동 (Bookmark.dart 실행)
                Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => BookmarkScreen(userId: widget.userId),
+                    builder: (context) => SearchHistoryScreen(userId: widget.userId),
                   ),
                 );
 
