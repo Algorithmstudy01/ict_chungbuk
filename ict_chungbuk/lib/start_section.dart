@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'login_section.dart';
 import 'signup_section.dart';
-import 'homepage.dart'; // Import the HomePage
-import 'my_page.dart'; // Import MyPage
 
 class StartSection extends StatelessWidget {
   @override
@@ -28,28 +26,6 @@ class StartSection extends StatelessWidget {
                 width: 250, // Set the desired width for all buttons
                 child: Column(
                   children: [
-                    // Start button
-                    ElevatedButton(
-                      onPressed: () {
-                        // Navigate to MyPage with a dummy userId
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MyPage(userId: 'dummy_user_id'), // Pass a default userId
-                          ),
-                        );
-                      },
-                      child: Text('시작하기'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.purple[300],
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        textStyle: TextStyle(fontSize: 16),
-                        fixedSize: Size(250, 50), // Ensures consistent size
-                      ),
-                    ),
-                    SizedBox(height: 16),
-
                     // Login button
                     ElevatedButton(
                       onPressed: () {
