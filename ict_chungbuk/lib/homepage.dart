@@ -131,7 +131,7 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,  // 시작 정렬로 변경
             children: [
-              SizedBox(height: 100),  // 상단에 20 픽셀의 여백 추가
+              SizedBox(height: 90),  // 상단에 20 픽셀의 여백 추가
               Column(
                 children: [
                   Container(

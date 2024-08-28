@@ -75,7 +75,7 @@ class _SearchHistoryScreenState extends State<SearchHistoryScreen> {
                   ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(16.0),
-                    tileColor: Colors.purple[50], // Very light purple color for the tile
+                    tileColor: Colors.purple[70], // Very light purple color for the tile
                     title: Text(
                       pillInfo.pillName.isNotEmpty ? pillInfo.pillName : 'No Name',
                       style: TextStyle(
