@@ -414,47 +414,26 @@ Widget build(BuildContext context) {
               children: [
                Column(
   children: [
-    SizedBox(
-      width: 335,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: controller.value.isInitialized ? _takePicture : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFC42AFA),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        child: const Text(
-          '촬영하기',
-          style: TextStyle(
-            fontSize: 18,
-            color: Colors.white,
-          ),
-        ),
-      ),
-    ),
-    SizedBox(height: 16), // 버튼 사이의 여백을 추가합니다. 이 값을 조정하여 원하는 공간을 설정할 수 있습니다.
-    SizedBox(
-      width: 335,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: _startSearch,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Color.fromARGB(255, 134, 44, 133), // Adjust color if needed
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        child: const Text(
-          '검색하기',
-          style: TextStyle(
-            fontSize: 18,
-            color: Colors.white,
-          ),
-        ),
-      ),
-    ),
+    GestureDetector(
+                          onTap: controller.value.isInitialized ? _takePicture : null,
+                          child: Image.asset(
+                            'assets/img/camera.png', // Use the correct path to your image
+                            width: 335, // Adjust the width as needed
+                            height: 56,
+                            fit: BoxFit.contain, // Ensure the image scales correctly
+                          ),
+                        ),
+
+                        SizedBox(height: 16), // 버튼 사이의 여백을 추가합니다. 이 값을 조정하여 원하는 공간을 설정할 수 있습니다.
+                        GestureDetector(
+                          onTap: _startSearch,
+                          child: Image.asset(
+                            'assets/img/search.png', // Use the correct path to your image
+                            width: 335, // Adjust the width as needed
+                            height: 56,
+                            fit: BoxFit.contain, // Ensure the image scales correctly
+                          ),
+                        ),
   ],
 ),
 
