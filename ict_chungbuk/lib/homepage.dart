@@ -20,6 +20,7 @@ class TabbarFrame extends StatelessWidget {
       child: DefaultTabController(
         length: 3,  // Updated length to 3 since there are 3 tabs
         child: Scaffold(
+          backgroundColor: Colors.white,
           bottomNavigationBar: const TabBar(
             indicatorColor: Colors.white,
             labelStyle: TextStyle(
