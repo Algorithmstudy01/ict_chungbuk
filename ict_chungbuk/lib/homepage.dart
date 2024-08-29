@@ -131,10 +131,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: SizedBox(
                       width: size.width * 0.3,
                       height: size.height * 0.05,
-                      child: const Text(
-                        '윤순연님',
+                      child: child: Text(
+                        '$_nickname님',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.black,
                           fontSize: 28,
                           fontFamily: 'Inter',
