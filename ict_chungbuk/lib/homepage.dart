@@ -4,7 +4,7 @@ import 'package:chungbuk_ict/find_pill.dart';
 import 'package:chungbuk_ict/search_history_screen.dart';
 import 'package:flutter/material.dart';
 import 'my_page.dart';
-import 'alarm.dart';
+import 'package:chungbuk_ict/NewAlarm/NewAlarm.dart';
 import 'package:http/http.dart' as http;
 import 'pill_information.dart'; // pill_information.dart 파일을 임포트
 
