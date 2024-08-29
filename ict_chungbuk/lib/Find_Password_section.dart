@@ -75,21 +75,12 @@ class _FindPasswordSectionState extends State<FindPasswordSection> {
             ),
             SizedBox(height: 20),
             Center(
-              child: ElevatedButton(
-                onPressed: _findPassword, // Attach the password finding logic
-                child: Text(
-                  'PW 찾기',
-                  style: TextStyle(
-                    color: Colors.white, // Set text color to white
-                    fontSize: 18, // Set font size to 18
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple[300],
-                  minimumSize: Size(double.infinity, 50), // Full-width button
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
+              child: GestureDetector(
+                onTap: _findPassword, // Attach the password finding logic
+                child: Image.asset(
+                  'assets/img/find_pw.png', // Use the correct path to your image
+                  width: 250, // Adjust the width as needed
+                  fit: BoxFit.contain, // Ensure the image scales correctly
                 ),
               ),
             ),
