@@ -1,13 +1,13 @@
-import 'package:chungbuk_ict/pill_information.dart';
 import 'package:flutter/material.dart';
-import 'BookMark.dart';
+
 import 'Change_Password.dart'; // 비밀번호 변경 페이지
 import 'Membership_Withdrawal.dart'; // 회원탈퇴 페이지
 import 'Family_Registration.dart'; // 가족 등록 페이지
-import 'alarm.dart'; // 알림 설정 페이지
-import 'homepage.dart'; // 홈 페이지
+
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'pill_information.dart'; // 알약 정보 페이지
+import 'package:chungbuk_ict/search_history_screen.dart';
 
 class MyPage extends StatefulWidget {
   final String userId;
@@ -23,20 +23,21 @@ class _MyPageState extends State<MyPage> {
 
   late String _userId = widget.userId; // userId 할당
 
- @override
+  @override
   void initState() {
     super.initState();
     _userId = widget.userId; // Initialize _userId here
     _fetchUserInfo();
   }
+
   void _fetchUserInfo() async {
     final response =
-        await http.get(Uri.parse('http://10.0.2.2:8000/user_info/$_userId'));
+    await http.get(Uri.parse('http://10.0.2.2:8000/user_info/$_userId'));
     if (response.statusCode == 200) {
       final data = json.decode(utf8.decode(response.bodyBytes)); // UTF-8 디코딩
       setState(() {
         _nickname = data['nickname'] ?? ''; // null 체크 및 기본값 설정
-        
+
       });
       print(_nickname);
     } else {
@@ -45,8 +46,16 @@ class _MyPageState extends State<MyPage> {
     }
   }
 
+  void openPillInformation() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SearchHistoryScreen(userId: widget.userId),
+      ),
+    );
+  }
 
-@override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -94,26 +103,17 @@ class _MyPageState extends State<MyPage> {
               color: Colors.grey[300], // Thicker separator color
               height: 8, // Increase height to make it thicker
             ),
-           
+
             ListTile(
               title: Text("검색 기록"),
               trailing: Icon(Icons.chevron_right),
-              onTap: () {
-                // 즐겨찾는 알약 화면으로 이동 (Bookmark.dart 실행)
-               Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => SearchHistoryScreen(userId: widget.userId),
-                  ),
-                );
-
-              },
+              onTap: openPillInformation, // Updated to call the correct function
             ),
             Container(
               color: Colors.grey[300], // Thicker separator color
               height: 8, // Increase height to make it thicker
             ),
-         
+
             ListTile(
               title: Text("비밀번호 변경"),
               trailing: Icon(Icons.chevron_right),
@@ -121,11 +121,11 @@ class _MyPageState extends State<MyPage> {
                 // 비밀번호 변경 화면으로 이동
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) =>ChangePW(userId: widget.userId)), 
+                  MaterialPageRoute(builder: (context) => ChangePW(userId: widget.userId)),
                 );
               },
             ),
-            
+
             ListTile(
               title: Text("가족 등록하기"),
               trailing: Icon(Icons.chevron_right),
@@ -155,7 +155,6 @@ class _MyPageState extends State<MyPage> {
           ],
         ),
       ),
-   
     );
   }
 }
