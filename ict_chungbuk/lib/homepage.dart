@@ -187,24 +187,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     ),
                   ),
-                  Container(
-                    width: size.width * 0.9,
-                    height: size.height * 0.2,
-                    decoration: ShapeDecoration(
-                      color: const Color(0xFFE4DDF1),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(32),
-                      ),
-                      shadows: const [
-                        BoxShadow(
-                          color: Color(0x3F000000),
-                          blurRadius: 4,
-                          offset: Offset(0, 4),
-                          spreadRadius: 0,
-                        )
-                      ],
-                    ),
-                  ),
+                 
                   Container(
                     width: size.width * 0.9,
                     margin: const EdgeInsets.only(top: 20),
