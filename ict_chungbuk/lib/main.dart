@@ -6,6 +6,7 @@ import 'start_section.dart';  // Import the start section
 import 'package:permission_handler/permission_handler.dart';
 import 'package:camera/camera.dart';
 import 'Camera.dart';
+import 'My_alarm/alarm.dart';
 
 late List<CameraDescription> _cameras;
 
