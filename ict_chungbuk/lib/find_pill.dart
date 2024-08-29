@@ -1,12 +1,14 @@
 import 'dart:convert';
-import 'dart:convert';
 import 'dart:io';
 import 'package:chungbuk_ict/pill_information.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'Camera.dart';
 
 class PillInfo {
   final String pillCode;
@@ -79,6 +81,7 @@ class FindPill extends StatefulWidget {
 
 class _FindPillState extends State<FindPill> with AutomaticKeepAliveClientMixin {
   late CameraController controller;
+  late List<CameraDescription> _cameras;
   XFile? _image;
   bool _isLoading = false;
   Map<String, dynamic> _pillInfo = {};
@@ -92,26 +95,41 @@ class _FindPillState extends State<FindPill> with AutomaticKeepAliveClientMixin 
     _initializeCamera();
   }
 
-  Future<void> _initializeCamera() async {
-    final cameras = await availableCameras();
-
-    if (cameras.isNotEmpty) {
+  void _initializeCamera() {
+    final Cameras = Provider.of<Camera>(context, listen: false);
+    _cameras = Cameras.cameras;
+    if (_cameras.isNotEmpty) {
       controller = CameraController(
-        cameras[0],
+        _cameras[0],
         ResolutionPreset.max,
         enableAudio: false,
       );
 
-      try {
-        await controller.initialize();
-        if (!mounted) return;
-        setState(() {});
-      } catch (e) {
-        print("CameraController Error: ${e.toString()}");
-      }
-    } else {
-      print("No cameras available");
     }
+    controller.initialize().then((_) {
+      // 카메라가 작동되지 않을 경우
+      if (!mounted) {
+        return;
+      }
+      // 카메라가 작동될 경우
+      setState(() {
+      });
+    })
+    // 카메라 오류 시
+        .catchError((Object e) {
+      if (e is CameraException) {
+        switch (e.code) {
+          case 'CameraAccessDenied':
+            print("CameraController Error : CameraAccessDenied");
+            // Handle access errors here.
+            break;
+          default:
+            print("CameraController Error");
+            // Handle other errors here.
+            break;
+        }
+      }
+    });
   }
 
   Future<void> _takePicture() async {
