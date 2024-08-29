@@ -175,15 +175,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                       ), // Corrected here
                                     );
                                   },
-                                  icon: Image.asset('assets/img/img.png'),
-                                ),
-                                const Text(
-                                  '즐겨찾기',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 25,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  icon: Image.asset('assets/img/favorites.png'),
                                 ),
                               ],
                             ),
