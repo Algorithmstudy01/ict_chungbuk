@@ -21,8 +21,10 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
   late bool vibrate;
   late double? volume;
   late String assetAudio;
-
+  late String alarmName;
   late bool mon, tue, wed, thu, fri, sat, sun;
+
+  final myController = TextEditingController();
 
   @override
   void initState() {
@@ -36,6 +38,7 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
       vibrate = true;
       volume = null;
       assetAudio = 'assets/marimba.mp3';
+      alarmName = '';
       mon = false;
       tue = false;
       wed = false;
@@ -50,6 +53,7 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
       vibrate = widget.alarmSettings!.vibrate;
       volume = widget.alarmSettings!.volume;
       assetAudio = widget.alarmSettings!.assetAudioPath;
+      alarmName = widget.alarmSettings!.alarmName;
       mon = widget.alarmSettings!.mon;
       tue = widget.alarmSettings!.tue;
       wed = widget.alarmSettings!.wed;
@@ -140,6 +144,8 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
         ? DateTime.now().millisecondsSinceEpoch % 10000 + 1
         : widget.alarmSettings!.id;
 
+    alarmName = myController.text;
+
     DateTime periodDateTime = getPeriodDays();
 
     final alarmSettings = AlarmSettings(
@@ -149,9 +155,10 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
       vibrate: vibrate,
       volume: volume,
       assetAudioPath: assetAudio,
-      notificationTitle: 'Alarm example',
-      notificationBody: 'Your alarm ($id) is ringing',
+      notificationTitle: '야금야금',
+      notificationBody: '$alarmName 드실 시간이에요',
       enableNotificationOnKill: Platform.isAndroid,
+      alarmName: alarmName,
       mon: mon,
       tue: tue,
       wed: wed,
@@ -295,6 +302,12 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
                     .displayMedium!
                     .copyWith(color: Colors.blueAccent),
               ),
+            ),
+          ),
+          TextField(
+            controller: myController,
+            decoration: InputDecoration(
+              hintText: alarmName != '' ? alarmName : '약 이름'
             ),
           ),
           Row(

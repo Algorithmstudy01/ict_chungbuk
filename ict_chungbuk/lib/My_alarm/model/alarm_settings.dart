@@ -17,6 +17,7 @@ class AlarmSettings {
     this.fadeDuration = 0.0,
     this.enableNotificationOnKill = true,
     this.androidFullScreenIntent = true,
+    this.alarmName = '',
     this.sun =false,
     this.mon =false,
     this.tue =false,
@@ -41,6 +42,7 @@ class AlarmSettings {
             json['enableNotificationOnKill'] as bool? ?? true,
         androidFullScreenIntent:
             json['androidFullScreenIntent'] as bool? ?? true,
+        alarmName: json['alarmName'] as String? ?? '',
         sun:json['sun'] as bool? ?? false,
         mon:json['mon'] as bool? ?? false,
         tue:json['tue'] as bool? ?? false,
@@ -131,6 +133,7 @@ class AlarmSettings {
 
   final bool sun, mon, tue, wed, thu, fri, sat;
 
+  final String alarmName;
   /// Returns a hash code for this `AlarmSettings` instance using
   /// Jenkins hash function.
   @override
@@ -147,6 +150,7 @@ class AlarmSettings {
     hash = hash ^ (notificationTitle.hashCode);
     hash = hash ^ (notificationBody.hashCode);
     hash = hash ^ enableNotificationOnKill.hashCode;
+    hash = hash ^ alarmName.hashCode;
     hash = hash ^ sun.hashCode;
     hash = hash ^ mon.hashCode;
     hash = hash ^ tue.hashCode;
@@ -173,6 +177,7 @@ class AlarmSettings {
     String? notificationBody,
     bool? enableNotificationOnKill,
     bool? androidFullScreenIntent,
+    String? alarmName,
     bool? sun,
     bool? mon,
     bool? tue,
@@ -195,6 +200,7 @@ class AlarmSettings {
           enableNotificationOnKill ?? this.enableNotificationOnKill,
       androidFullScreenIntent:
           androidFullScreenIntent ?? this.androidFullScreenIntent,
+      alarmName: alarmName ?? this.alarmName,
       sun: sun ?? this.sun,
       mon: mon ?? this.mon,
       tue: tue ?? this.tue,
@@ -218,6 +224,7 @@ class AlarmSettings {
         'notificationBody': notificationBody,
         'enableNotificationOnKill': enableNotificationOnKill,
         'androidFullScreenIntent': androidFullScreenIntent,
+        'alarmName': alarmName,
         'sun':sun,
         'mon':mon,
         'tue':tue,
@@ -254,6 +261,7 @@ class AlarmSettings {
           notificationBody == other.notificationBody &&
           enableNotificationOnKill == other.enableNotificationOnKill &&
           androidFullScreenIntent == other.androidFullScreenIntent &&
+          alarmName == other.alarmName &&
           sun == other.sun &&
           mon == other.mon &&
           tue == other.tue &&

@@ -50,6 +50,7 @@ class ExampleAlarmRingScreen extends StatelessWidget {
         notificationTitle: alarmSettings.notificationTitle,
         notificationBody: alarmSettings.notificationBody,
         enableNotificationOnKill: alarmSettings.enableNotificationOnKill,
+        alarmName: alarmSettings.alarmName,
         sun: alarmSettings.sun,
         mon: alarmSettings.mon,
         tue: alarmSettings.tue,
@@ -75,10 +76,10 @@ class ExampleAlarmRingScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             Text(
-              'You alarm (${alarmSettings.id}) is ringing...',
+              '${alarmSettings.alarmName} 드실 시간이에요',
               style: Theme.of(context).textTheme.titleLarge,
             ),
-            const Text('🔔', style: TextStyle(fontSize: 50)),
+            const Image(image: AssetImage('assets/img/pill.gif')),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -98,7 +99,7 @@ class ExampleAlarmRingScreen extends StatelessWidget {
                     ).then((_) => Navigator.pop(context));
                   },
                   child: Text(
-                    'Snooze',
+                    '나중에 울리기',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
@@ -107,7 +108,7 @@ class ExampleAlarmRingScreen extends StatelessWidget {
                     stopAlarm(alarmSettings).then((_) => Navigator.pop(context));
                   },
                   child: Text(
-                    'Stop',
+                    '정지',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),

@@ -41,7 +41,7 @@ class ExampleAlarmTile extends StatelessWidget {
         child: Center (
           child: Container(
             width: size.width * 0.95,
-            height: 189,
+            height: 150,
             decoration: ShapeDecoration(
               color: const Color(0xFF959595),
               shape: RoundedRectangleBorder(
@@ -58,7 +58,7 @@ class ExampleAlarmTile extends StatelessWidget {
                    Text(
                     title,
                       style: const TextStyle(
-                        fontSize: 28,
+                        fontSize: 30,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -205,11 +205,11 @@ class ExampleAlarmTile extends StatelessWidget {
                     )
                   ],
                 ),
-                Row(
+                /* Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Image.asset(
-                      'assets/img/pill_icon.png',
+                      'assets/img/pill.png',
                       width: 83,
                       height: 83,
                     ),
@@ -245,7 +245,18 @@ class ExampleAlarmTile extends StatelessWidget {
                       ],
                     )
                   ],
-                )
+                ) */
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  alarmsettings.alarmName,
+                  textAlign: TextAlign.start,
+                  style: const TextStyle(
+                    fontSize: 30,
+                    color: Colors.white,
+                  ),
+                ),
+              )
               ],
             ),
           ),
