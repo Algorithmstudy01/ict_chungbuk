@@ -15,9 +15,9 @@ class StartSection extends StatelessWidget {
             children: [
               // Pill icon image
               Image.asset(
-                'assets/img/pill.png', // Replace with your image asset path
-                width: 100,
-                height: 100,
+                'assets/img/logo.jpg', // Replace with your image asset path
+                width: 300,
+                height: 300,
               ),
               SizedBox(height: 40), // Space between image and buttons
 
