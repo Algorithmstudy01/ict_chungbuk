@@ -22,9 +22,7 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
   late double? volume;
   late String assetAudio;
 
-  static const nbDays =7;
   late bool mon, tue, wed, thu, fri, sat, sun;
-  late List<int> days;
 
   @override
   void initState() {
@@ -69,14 +67,49 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
 
     switch (difference) {
       case 0:
-        return 'Today';
+        return '오늘';
       case 1:
-        return 'Tomorrow';
+        return '내일';
       case 2:
-        return 'After tomorrow';
+        return '모레';
       default:
-        return 'In $difference days';
+        return ' $difference일 후';
     }
+  }
+
+  DateTime getPeriodDays(){
+    int i=0;
+    DateTime periodDateTime = selectedDateTime;
+
+    for(i; i<8; i++){
+      periodDateTime = selectedDateTime.add(Duration(days: i));
+      switch(periodDateTime.weekday) {
+        case 1:
+          if(mon == true){ i=8; }
+          break;
+        case 2:
+          if(tue == true){ i=8; }
+          break;
+        case 3:
+          if(wed == true){ i=8; }
+          break;
+        case 4:
+          if(thu == true){ i=8; }
+          break;
+        case 5:
+          if(fri == true){ i=8; }
+          break;
+        case 6:
+          if(sat == true){ i=8; }
+          break;
+        case 7:
+          if(sun == true){ i=8; }
+          break;
+      }
+      if(i==7)periodDateTime = selectedDateTime;
+    }
+
+    return periodDateTime;
   }
 
   Future<void> pickTime() async {
@@ -107,9 +140,11 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
         ? DateTime.now().millisecondsSinceEpoch % 10000 + 1
         : widget.alarmSettings!.id;
 
+    DateTime periodDateTime = getPeriodDays();
+
     final alarmSettings = AlarmSettings(
       id: id,
-      dateTime: selectedDateTime,
+      dateTime: periodDateTime,
       loopAudio: loopAudio,
       vibrate: vibrate,
       volume: volume,
@@ -143,8 +178,16 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
     });
   }
 
+  void dayCount(){
+    DateTime now = DateTime.now();
+    DateTime today = DateTime(now.year, now.month, now.day);
+    selectedDateTime = selectedDateTime.subtract(Duration(days: selectedDateTime.difference(today).inDays));
+    selectedDateTime = getPeriodDays();
+  }
+
   @override
   Widget build(BuildContext context) {
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
       child: Column(
@@ -156,7 +199,7 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
                 child: Text(
-                  'Cancel',
+                  '취소',
                   style: Theme.of(context)
                       .textTheme
                       .titleLarge!
@@ -168,7 +211,7 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
                 child: loading
                     ? const CircularProgressIndicator()
                     : Text(
-                        'Save',
+                        '저장',
                         style: Theme.of(context)
                             .textTheme
                             .titleLarge!
@@ -181,31 +224,52 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               Column(children: [
-                Checkbox(value: sun, onChanged: (value) => setState(() => sun = value!)),
+                Checkbox(value: sun, onChanged: (value) => setState(() {
+                  sun = value!;
+                  dayCount();
+                })),
                 Text('일', style: TextStyle(color: sun ? Colors.red : Colors.grey),)
               ],),
               Column(children: [
-                Checkbox(value: mon, onChanged: (value) => setState(() => mon = value!)),
+                Checkbox(value: mon, onChanged: (value) => setState(() {
+                  mon = value!;
+                  dayCount();
+                })),
                 Text('월', style: TextStyle(color: mon ? Colors.black : Colors.grey),)
               ],),
               Column(children: [
-                Checkbox(value: tue, onChanged: (value) => setState(() => tue = value!)),
+                Checkbox(value: tue, onChanged: (value) => setState(() {
+                  tue = value!;
+                  dayCount();
+                })),
                 Text('화', style: TextStyle(color: tue ? Colors.black : Colors.grey),)
               ],),
               Column(children: [
-                Checkbox(value: wed, onChanged: (value) => setState(() => wed = value!)),
+                Checkbox(value: wed, onChanged: (value) => setState(() {
+                  wed = value!;
+                  dayCount();
+                })),
                 Text('수', style: TextStyle(color: wed ? Colors.black : Colors.grey),)
               ],),
               Column(children: [
-                Checkbox(value: thu, onChanged: (value) => setState(() => thu = value!)),
+                Checkbox(value: thu, onChanged: (value) => setState(() {
+                  thu = value!;
+                  dayCount();
+                })),
                 Text('목', style: TextStyle(color: thu ? Colors.black : Colors.grey),)
               ],),
               Column(children: [
-                Checkbox(value: fri, onChanged: (value) => setState(() => fri = value!)),
+                Checkbox(value: fri, onChanged: (value) => setState(() {
+                  fri = value!;
+                  dayCount();
+                })),
                 Text('금', style: TextStyle(color: fri ? Colors.black : Colors.grey),)
               ],),
               Column(children: [
-                Checkbox(value: sat, onChanged: (value) => setState(() => sat = value!)),
+                Checkbox(value: sat, onChanged: (value) => setState(() {
+                  sat = value!;
+                  dayCount();
+                })),
                 Text('토', style: TextStyle(color: sat ? Colors.blueAccent : Colors.grey),)
               ],),
 
@@ -237,7 +301,7 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Loop alarm audio',
+                '알람음 반복',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               Switch(
@@ -250,7 +314,7 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Vibrate',
+                '진동',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               Switch(
@@ -263,7 +327,7 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Sound',
+                '알람음',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               DropdownButton(
@@ -298,7 +362,7 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Custom volume',
+                '볼륨 조절',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               Switch(
@@ -337,7 +401,7 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
             TextButton(
               onPressed: deleteAlarm,
               child: Text(
-                'Delete Alarm',
+                '알람 제거',
                 style: Theme.of(context)
                     .textTheme
                     .titleMedium!

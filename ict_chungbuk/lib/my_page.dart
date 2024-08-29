@@ -1,13 +1,52 @@
+import 'package:chungbuk_ict/pill_information.dart';
 import 'package:flutter/material.dart';
+import 'BookMark.dart';
 import 'Change_Password.dart'; // 비밀번호 변경 페이지
 import 'Membership_Withdrawal.dart'; // 회원탈퇴 페이지
-import 'Bookmark.dart'; // 즐겨찾기 페이지
 import 'Family_Registration.dart'; // 가족 등록 페이지
 import 'alarm.dart'; // 알림 설정 페이지
 import 'homepage.dart'; // 홈 페이지
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
-class MyPage extends StatelessWidget {
+class MyPage extends StatefulWidget {
+  final String userId;
+
+  const MyPage({Key? key, required this.userId}) : super(key: key);
+
   @override
+  State<MyPage> createState() => _MyPageState();
+}
+
+class _MyPageState extends State<MyPage> {
+  String _nickname = '';
+
+  late String _userId = widget.userId; // userId 할당
+
+ @override
+  void initState() {
+    super.initState();
+    _userId = widget.userId; // Initialize _userId here
+    _fetchUserInfo();
+  }
+  void _fetchUserInfo() async {
+    final response =
+        await http.get(Uri.parse('http://10.0.2.2:8000/user_info/$_userId'));
+    if (response.statusCode == 200) {
+      final data = json.decode(utf8.decode(response.bodyBytes)); // UTF-8 디코딩
+      setState(() {
+        _nickname = data['nickname'] ?? ''; // null 체크 및 기본값 설정
+        
+      });
+      print(_nickname);
+    } else {
+      // 에러 처리
+      print('Failed to load user info');
+    }
+  }
+
+
+@override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -26,7 +65,7 @@ class MyPage extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(16.0),
               color: Colors.grey[100],
-              child: const Row(
+              child: Row(
                 children: [
                   CircleAvatar(
                     radius: 30,
@@ -41,7 +80,7 @@ class MyPage extends StatelessWidget {
                         style: TextStyle(fontSize: 16),
                       ),
                       Text(
-                        "홍길동 님",
+                        "$_nickname 님",
                         style: TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold),
                       ),
@@ -55,35 +94,26 @@ class MyPage extends StatelessWidget {
               color: Colors.grey[300], // Thicker separator color
               height: 8, // Increase height to make it thicker
             ),
+           
             ListTile(
-              title: Text("알약 검색 기록"),
-              trailing: Icon(Icons.chevron_right),
-              onTap: () {
-                // Navigate to 알약 검색 기록 screen
-              },
-            ),
-            ListTile(
-              title: Text("즐겨찾는 알약"),
+              title: Text("검색 기록"),
               trailing: Icon(Icons.chevron_right),
               onTap: () {
                 // 즐겨찾는 알약 화면으로 이동 (Bookmark.dart 실행)
-                Navigator.push(
+               Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => BookmarkScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => SearchHistoryScreen(userId: widget.userId),
+                  ),
                 );
+
               },
             ),
             Container(
               color: Colors.grey[300], // Thicker separator color
               height: 8, // Increase height to make it thicker
             ),
-            ListTile(
-              title: Text("개인정보 수정"),
-              trailing: Icon(Icons.chevron_right),
-              onTap: () {
-                // Navigate to 개인정보 수정 screen
-              },
-            ),
+         
             ListTile(
               title: Text("비밀번호 변경"),
               trailing: Icon(Icons.chevron_right),
@@ -91,10 +121,11 @@ class MyPage extends StatelessWidget {
                 // 비밀번호 변경 화면으로 이동
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => PasswordChangeScreen()),
+                  MaterialPageRoute(builder: (context) =>ChangePW(userId: widget.userId)), 
                 );
               },
             ),
+            
             ListTile(
               title: Text("가족 등록하기"),
               trailing: Icon(Icons.chevron_right),
@@ -102,7 +133,7 @@ class MyPage extends StatelessWidget {
                 // 가족 등록하기 화면으로 이동
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => FamilyRegister()), // Added Family Registration navigation
+                  MaterialPageRoute(builder: (context) => FamilyRegister(userId: widget.userId)), // Added Family Registration navigation
                 );
               },
             ),
@@ -117,13 +148,14 @@ class MyPage extends StatelessWidget {
                 // 회원탈퇴 화면으로 이동
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => MembershipWithdrawScreen()),
+                  MaterialPageRoute(builder: (context) => MembershipWithdrawScreen(userId: widget.userId)),
                 );
               },
             ),
           ],
         ),
       ),
+   
     );
   }
 }

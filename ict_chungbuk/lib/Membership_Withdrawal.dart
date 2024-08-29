@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import 'my_page.dart'; // Import MyPage screen
+import 'my_page.dart';
 
 class MembershipWithdrawScreen extends StatelessWidget {
+  final String userId; // Add userId field
+
+  MembershipWithdrawScreen({required this.userId}); // Constructor with userId
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,7 +67,9 @@ class MembershipWithdrawScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => WithdrawCompleteScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => WithdrawCompleteScreen(userId: userId),
+                    ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -122,6 +128,10 @@ class _PasswordFieldState extends State<PasswordField> {
 }
 
 class WithdrawCompleteScreen extends StatelessWidget {
+  final String userId; // Add userId field
+
+  WithdrawCompleteScreen({required this.userId}); // Constructor with userId
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -132,7 +142,7 @@ class WithdrawCompleteScreen extends StatelessWidget {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => MyPage()),
+              MaterialPageRoute(builder: (context) => MyPage(userId: userId)), // Pass userId
             );
           },
         ),

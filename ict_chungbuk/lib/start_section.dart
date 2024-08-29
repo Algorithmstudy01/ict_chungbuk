@@ -1,12 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'login_section.dart';
 import 'signup_section.dart';
-import 'homepage.dart'; // Import the HomePage
 
 class StartSection extends StatelessWidget {
-  const StartSection({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,7 +15,7 @@ class StartSection extends StatelessWidget {
             children: [
               // Pill icon image
               Image.asset(
-                'assets/img/pill_icon.png', // Replace with your image asset path
+                'assets/img/pill.png', // Replace with your image asset path
                 width: 100,
                 height: 100,
               ),
@@ -30,26 +26,6 @@ class StartSection extends StatelessWidget {
                 width: 250, // Set the desired width for all buttons
                 child: Column(
                   children: [
-                    // Start button
-                    ElevatedButton(
-                      onPressed: () {
-                        // Navigate to HomePage
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => TabbarFrame()),
-                        );
-                      },
-                      child: Text('시작하기'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.purple[300],
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        textStyle: TextStyle(fontSize: 16),
-                        fixedSize: Size(250, 50), // Ensures consistent size
-                      ),
-                    ),
-                    SizedBox(height: 16),
-
                     // Login button
                     ElevatedButton(
                       onPressed: () {

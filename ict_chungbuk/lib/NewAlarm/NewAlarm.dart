@@ -5,17 +5,16 @@ import 'package:flutter/material.dart';
 
 import 'ring.dart';
 import 'edit_alarm.dart';
-import 'shortcut_button.dart';
 import 'tile.dart';
 
 class ExampleAlarmHomeScreen extends StatefulWidget {
   const ExampleAlarmHomeScreen({super.key});
 
   @override
-  State<ExampleAlarmHomeScreen> createState() => ExampleAlarmHomeScreenState();
+  State<ExampleAlarmHomeScreen> createState() => _ExampleAlarmHomeScreenState();
 }
 
-class ExampleAlarmHomeScreenState extends State<ExampleAlarmHomeScreen> with AutomaticKeepAliveClientMixin{
+class _ExampleAlarmHomeScreenState extends State<ExampleAlarmHomeScreen> with AutomaticKeepAliveClientMixin{
   late List<AlarmSettings> alarms;
 
   static StreamSubscription<AlarmSettings>? subscription;
@@ -39,7 +38,7 @@ class ExampleAlarmHomeScreenState extends State<ExampleAlarmHomeScreen> with Aut
       context,
       MaterialPageRoute<void>(
         builder: (context) =>
-            ExampleAlarmRingScreen(alarmSettings: alarmSettings),
+            ExampleAlarmRingScreen(alarmSettings: alarmSettings, refreshAlarms: loadAlarms,),
       ),
     );
     loadAlarms();
@@ -71,14 +70,15 @@ class ExampleAlarmHomeScreenState extends State<ExampleAlarmHomeScreen> with Aut
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(title: const Text('alarm 3.1.5')),
+      appBar: AppBar(title: const Text('알람')),
       body: SafeArea(
         child: alarms.isNotEmpty
             ? ListView.separated(
           itemCount: alarms.length,
-          separatorBuilder: (context, index) => const Divider(height: 1),
+          separatorBuilder: (context, index) => const Divider(height: 8),
           itemBuilder: (context, index) {
             return ExampleAlarmTile(
               key: Key(alarms[index].id.toString()),
@@ -86,6 +86,7 @@ class ExampleAlarmHomeScreenState extends State<ExampleAlarmHomeScreen> with Aut
                 hour: alarms[index].dateTime.hour,
                 minute: alarms[index].dateTime.minute,
               ).format(context),
+              alarmsettings: alarms[index],
               onPressed: () => navigateToAlarmScreen(alarms[index]),
               onDismissed: () {
                 Alarm.stop(alarms[index].id).then((_) => loadAlarms());
@@ -95,7 +96,7 @@ class ExampleAlarmHomeScreenState extends State<ExampleAlarmHomeScreen> with Aut
         )
             : Center(
           child: Text(
-            'No alarms set',
+            '알람을 등록해주세요',
             style: Theme.of(context).textTheme.titleMedium,
           ),
         ),
@@ -105,7 +106,11 @@ class ExampleAlarmHomeScreenState extends State<ExampleAlarmHomeScreen> with Aut
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            ExampleAlarmHomeShortcutButton(refreshAlarms: loadAlarms),
+            // ExampleAlarmHomeShortcutButton(refreshAlarms: loadAlarms),
+            FloatingActionButton(
+              onPressed: loadAlarms,
+              child: const Icon(Icons.refresh, size: 33,),
+            ),
             FloatingActionButton(
               onPressed: () => navigateToAlarmScreen(null),
               child: const Icon(Icons.alarm_add_rounded, size: 33),

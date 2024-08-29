@@ -1,38 +1,70 @@
 import 'package:chungbuk_ict/My_alarm/alarm.dart';
 import 'package:flutter/material.dart';
 
-import 'NewAlarm.dart';
-
 class ExampleAlarmRingScreen extends StatelessWidget {
-  const ExampleAlarmRingScreen({required this.alarmSettings, super.key});
+  const ExampleAlarmRingScreen({required this.alarmSettings, required this.refreshAlarms, super.key});
 
   final AlarmSettings alarmSettings;
+  final void Function() refreshAlarms;
   
   Future<void> stopAlarm(AlarmSettings alarmSettings) async {
 
-    DateTime newdDateTime = alarmSettings.dateTime.add(const Duration(days: 7)); 
-    final newalarmSettings = AlarmSettings( 
-      id: alarmSettings.id,
-      dateTime: newdDateTime, 
-      loopAudio: alarmSettings.loopAudio, 
-      vibrate: alarmSettings.vibrate, 
-      volume: alarmSettings.volume, 
-      assetAudioPath: alarmSettings.assetAudioPath, 
-      notificationTitle: alarmSettings.notificationTitle, 
-      notificationBody: alarmSettings.notificationBody, 
-      enableNotificationOnKill: alarmSettings.enableNotificationOnKill, 
-      sun: alarmSettings.sun,
-      mon: alarmSettings.mon,
-      tue: alarmSettings.tue,
-      wed: alarmSettings.wed,
-      thu: alarmSettings.thu,
-      fri: alarmSettings.fri,
-      sat: alarmSettings.sat,
-    );
+    int i=1;
+    DateTime newdDateTime = alarmSettings.dateTime;
 
-    Alarm.stop(alarmSettings.id).then((bool result) { 
-      return Alarm.set(alarmSettings: newalarmSettings);
-    }); 
+    for(i; i<8; i++){
+      newdDateTime = alarmSettings.dateTime.add(Duration(days: i));
+      switch(newdDateTime.weekday) {
+        case 1:
+          if(alarmSettings.mon == true){ i=8; }
+          break;
+        case 2:
+          if(alarmSettings.tue == true){ i=8; }
+          break;
+        case 3:
+          if(alarmSettings.wed == true){ i=8; }
+          break;
+        case 4:
+          if(alarmSettings.thu == true){ i=8; }
+          break;
+        case 5:
+          if(alarmSettings.fri == true){ i=8; }
+          break;
+        case 6:
+          if(alarmSettings.sat == true){ i=8; }
+          break;
+        case 7:
+          if(alarmSettings.sun == true){ i=8; }
+          break;
+      }
+      if(i==7)newdDateTime = alarmSettings.dateTime;
+    }
+
+      final newalarmSettings = AlarmSettings(
+        id: alarmSettings.id,
+        dateTime: newdDateTime,
+        loopAudio: alarmSettings.loopAudio,
+        vibrate: alarmSettings.vibrate,
+        volume: alarmSettings.volume,
+        assetAudioPath: alarmSettings.assetAudioPath,
+        notificationTitle: alarmSettings.notificationTitle,
+        notificationBody: alarmSettings.notificationBody,
+        enableNotificationOnKill: alarmSettings.enableNotificationOnKill,
+        sun: alarmSettings.sun,
+        mon: alarmSettings.mon,
+        tue: alarmSettings.tue,
+        wed: alarmSettings.wed,
+        thu: alarmSettings.thu,
+        fri: alarmSettings.fri,
+        sat: alarmSettings.sat,
+      );
+
+
+    Alarm.stop(alarmSettings.id).then((bool result) {
+      if(newalarmSettings.dateTime != alarmSettings.dateTime) Alarm.set(alarmSettings: newalarmSettings);
+      refreshAlarms();
+    });
+
   }
 
   @override

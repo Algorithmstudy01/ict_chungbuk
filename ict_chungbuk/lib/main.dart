@@ -1,6 +1,6 @@
-import 'package:chungbuk_ict/My_alarm/alarm.dart';
+import 'package:chungbuk_ict/homepage.dart';
+import 'package:chungbuk_ict/my_page.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'start_section.dart';  // Import the start section
 import 'package:permission_handler/permission_handler.dart';
@@ -10,28 +10,22 @@ import 'Camera.dart';
 late List<CameraDescription> _cameras;
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Ensure widget binding is initialized
   _cameras = await availableCameras();
-  WidgetsFlutterBinding.ensureInitialized();
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  await Alarm.init();
-
+  
   runApp(MyApp());
 
   if (await Permission.contacts.request().isGranted) {
-  // Either the permission was already granted before or the user just granted it.
+    // Either the permission was already granted before or the user just granted it.
   }
 
-// You can request multiple permissions at once.
+  // Request multiple permissions at once.
   Map<Permission, PermissionStatus> statuses = await [
-  Permission.camera,
-  Permission.storage,
-  Permission.notification,
-  Permission.scheduleExactAlarm,
+    Permission.camera,
+    Permission.storage,
   ].request();
   print(statuses[Permission.camera]);
-
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -39,9 +33,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => Camera(_cameras),
-      child: const MaterialApp(
-        home: StartSection(),// Start the app with StartSection
+      create: (context) => Camera(_cameras),  // Pass the cameras to the provider
+      child: MaterialApp(
+        home: StartSection(), // Start the app with StartSection
       ),
     );
   }
