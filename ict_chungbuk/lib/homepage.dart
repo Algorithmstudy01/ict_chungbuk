@@ -158,7 +158,10 @@ class _MyHomePageState extends State<MyHomePage> {
                           Expanded(
                             child: IconButton(
                               onPressed: () =>
-                                  DefaultTabController.of(context).animateTo(1),
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => FindPill(userId: widget.userId))
+                                  ),
                               icon: Image.asset('assets/img/find_pill.png'),
                             ),
                           ),
