@@ -12,6 +12,8 @@ late List<CameraDescription> _cameras;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Ensure widget binding is initialized
   _cameras = await availableCameras();
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  await Alarm.init();
   
   runApp(MyApp());
 
@@ -23,6 +25,8 @@ Future<void> main() async {
   Map<Permission, PermissionStatus> statuses = await [
     Permission.camera,
     Permission.storage,
+    Permission.notification,
+    Permission.scheduleExactAlarm,
   ].request();
   print(statuses[Permission.camera]);
 }
