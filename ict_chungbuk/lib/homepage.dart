@@ -45,7 +45,7 @@ class TabbarFrame extends StatelessWidget {
           body: TabBarView(
             children: [
               MyHomePage(userId: userId),
-              AlarmPage(userId: userId), // AlarmPage is from alarm.dart
+              const ExampleAlarmHomeScreen(), // AlarmPage is from alarm.dart
               MyPage(userId: userId),
             ],
           ),
