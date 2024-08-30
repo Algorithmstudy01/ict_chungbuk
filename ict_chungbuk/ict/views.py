@@ -74,23 +74,37 @@ import torchvision.transforms as T
 import torch
 import torchvision
 
+import os
+import csv
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view
+from PIL import Image
+import torchvision.transforms as T
+import torch
+import torchvision
+
 def get_model(num_classes):
     from torchvision.models.detection import FasterRCNN
     from torchvision.models.mobilenetv3 import mobilenet_v3_large
     from torchvision.models.detection.anchor_utils import AnchorGenerator
 
+    # MobileNetV3 기반 백본을 사용
     backbone = mobilenet_v3_large(pretrained=True).features
-    backbone.out_channels = 960
+    backbone.out_channels = 960  # MobileNetV3 Large의 출력 채널 수
 
+    # 단일 특성 맵을 위한 앵커 생성기 설정
     anchor_generator = AnchorGenerator(
         sizes=((32, 64, 128, 256, 512),),
         aspect_ratios=((0.5, 1.0, 2.0),) * 5
     )
 
+    # RoIAlign 설정 (단일 레벨 특성 맵 사용)
     roi_pooler = torchvision.ops.MultiScaleRoIAlign(
         featmap_names=['0'], output_size=7, sampling_ratio=2
     )
 
+    # Faster R-CNN 모델 정의
     model = FasterRCNN(
         backbone,
         num_classes=num_classes,
@@ -100,13 +114,15 @@ def get_model(num_classes):
     
     return model
 
+# CSV에서 알약 정보를 검색하는 함수
 def find_pill_info_from_csv(predicted_category_id, csv_path):
-    with open(csv_path, mode='r', encoding='utf-8-sig') as file:
+    with open(csv_path, mode='r', encoding='utf-8-sig') as file:  # UTF-8 인코딩 사용
         reader = csv.DictReader(file)
         for row in reader:
             if int(row['category_id']) == predicted_category_id:
-                return {
+                pill_info = {
                     "제품명": row["제품명"],
+                    "drug_N": row["drug_N"],
                     "품목기준코드": row["품목기준코드"],
                     "제조/수입사": row["제조/수입사"],
                     "이 약의 효능은 무엇입니까?": row["이 약의 효능은 무엇입니까?"],
@@ -117,7 +133,8 @@ def find_pill_info_from_csv(predicted_category_id, csv_path):
                     "이 약은 어떤 이상반응이 나타날 수 있습니까?": row["이 약은 어떤 이상반응이 나타날 수 있습니까?"],
                     "이 약은 어떻게 보관해야 합니까?": row["이 약은 어떻게 보관해야 합니까?"]
                 }
-    return {}
+                return pill_info
+    return None
 
 @api_view(['POST'])
 @csrf_exempt
@@ -134,14 +151,16 @@ def predict(request):
                 f.write(chunk)
         
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        num_classes = 54
+
+        num_classes = 54  
         model = get_model(num_classes=num_classes)
-        model.load_state_dict(torch.load('/Users/seon/Desktop/ict model/pill_detection_53_more.pth', map_location=device))
-        model.to(device)
+        
+        model.load_state_dict(torch.load('/Users/seon/Desktop/model/pill_detection_4.pth', map_location=device))
+        model.to(device)  
         
         image = Image.open(image_path).convert("RGB")
         transform = T.Compose([T.ToTensor()])
-        image_tensor = transform(image).unsqueeze(0).to(device)
+        image_tensor = transform(image).unsqueeze(0).to(device)  # Ensure the tensor is on the same device
     except Exception as e:
         return JsonResponse({'error': f'Error loading model or processing image: {str(e)}'}, status=500)
 
@@ -162,27 +181,23 @@ def predict(request):
         max_score_idx = pred_scores.argmax()
         predicted_category_id = pred_labels[max_score_idx]
 
-        csv_path = '/Users/seon/Desktop/ict model/info.csv'
+        csv_path = '/Users/seon/Desktop/model/info.csv'
 
         pill_info_csv = find_pill_info_from_csv(predicted_category_id, csv_path)
 
-       
         response_data = {
-                'prediction_score': float(pred_scores[max_score_idx]),
-                'product_name': pill_info_csv.get('제품명', 'Unknown'),
-                'manufacturer': pill_info_csv.get('제조/수입사', 'Unknown'),
-                'pill_code': pill_info_csv.get('품목기준코드', 'Unknown'),
-                'efficacy': pill_info_csv.get('이 약의 효능은 무엇입니까?', 'No information'),
-                'usage': pill_info_csv.get('이 약은 어떻게 사용합니까?', 'No information'),
-                'precautions_before_use': pill_info_csv.get('이 약을 사용하기 전에 반드시 알아야 할 내용은 무엇입니까?', 'No information'),
-                'usage_precautions': pill_info_csv.get('이 약의 사용상 주의사항은 무엇입니까?', 'No information'),
-                'drug_food_interactions': pill_info_csv.get('이 약을 사용하는 동안 주의해야 할 약 또는 음식은 무엇입니까?', 'No information'),
-                'side_effects': pill_info_csv.get('이 약은 어떤 이상반응이 나타날 수 있습니까?', 'No information'),
-                'storage_instructions': pill_info_csv.get('이 약은 어떻게 보관해야 합니까?', 'No information'),
-            }
-
-           
-    
+            'prediction_score': float(pred_scores[max_score_idx]),
+            'product_name': pill_info_csv.get('제품명', 'Unknown'),
+            'manufacturer': pill_info_csv.get('제조/수입사', 'Unknown'),
+            'pill_code': pill_info_csv.get('품목기준코드', 'Unknown'),
+            'efficacy': pill_info_csv.get('이 약의 효능은 무엇입니까?', 'No information'),
+            'usage': pill_info_csv.get('이 약은 어떻게 사용합니까?', 'No information'),
+            'precautions_before_use': pill_info_csv.get('이 약을 사용하기 전에 반드시 알아야 할 내용은 무엇입니까?', 'No information'),
+            'usage_precautions': pill_info_csv.get('이 약의 사용상 주의사항은 무엇입니까?', 'No information'),
+            'drug_food_interactions': pill_info_csv.get('이 약을 사용하는 동안 주의해야 할 약 또는 음식은 무엇입니까?', 'No information'),
+            'side_effects': pill_info_csv.get('이 약은 어떤 이상반응이 나타날 수 있습니까?', 'No information'),
+            'storage_instructions': pill_info_csv.get('이 약은 어떻게 보관해야 합니까?', 'No information'),
+        }
     except Exception as e:
         return JsonResponse({'error': f'Error during prediction: {str(e)}'}, status=500)
     finally:
@@ -190,6 +205,7 @@ def predict(request):
             os.remove(image_path)
 
     return JsonResponse(response_data, status=200)
+
 
 from django.views.decorators.csrf import csrf_exempt
 
@@ -202,7 +218,6 @@ from .serializers import UserlistSerializer
 @api_view(['POST'])
 def register_user(request):
     if request.method == 'POST':
-        # Extract data from request
         data = request.data
         nickname = data.get('nickname', '')
         id = data.get('id', '')
@@ -373,6 +388,15 @@ def add_family_member(request, user_id):
         return Response({'message': 'Family member added successfully'}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import Userlist
+
+@csrf_exempt
+def check_member(request, user_id):
+    if request.method == 'GET':
+        user_exists = Userlist.objects.filter(id=user_id).exists()
+        return JsonResponse({'exists': user_exists})
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -625,3 +649,176 @@ def save_search_history(request):
     
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+
+# views.py
+# views.py
+from django.http import JsonResponse
+import json
+
+def send_family_info(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            # Process the data as needed
+            return JsonResponse({'status': 'success'})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'failure', 'message': 'Invalid JSON'}, status=400)
+    return JsonResponse({'status': 'failure', 'message': 'Invalid request method'}, status=405)
+
+import csv
+import torch
+from PIL import Image
+import torchvision.transforms as T
+from rest_framework.decorators import api_view
+from django.http import JsonResponse
+import logging
+from django.views.decorators.csrf import csrf_exempt 
+import os
+
+def get_model2(num_classes):
+    from torchvision.models.detection import FasterRCNN
+    from torchvision.models.mobilenetv3 import mobilenet_v3_large
+    from torchvision.models.detection.anchor_utils import AnchorGenerator
+
+    backbone = mobilenet_v3_large(pretrained=True).features
+    backbone.out_channels = 960
+
+    anchor_generator = AnchorGenerator(
+        sizes=((32, 64, 128, 256, 512),),
+        aspect_ratios=((0.5, 1.0, 2.0),) * 5
+    )
+
+    roi_pooler = torchvision.ops.MultiScaleRoIAlign(
+        featmap_names=['0'], output_size=7, sampling_ratio=2
+    )
+
+    model = FasterRCNN(
+        backbone,
+        num_classes=num_classes,
+        rpn_anchor_generator=anchor_generator,
+        box_roi_pool=roi_pooler
+    )
+    
+    return model
+
+logger = logging.getLogger(__name__)
+
+# CSV에서 알약 정보를 검색하는 함수
+def find_pill_info_from_csv2(predicted_category_id, csv_path):
+    with open(csv_path, mode='r', encoding='utf-8-sig') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            if int(row['category_id']) == predicted_category_id:
+                pill_info = {
+                    "제품명": row["제품명"],
+                    "drug_N": row["drug_N"],
+                    "품목기준코드": row["품목기준코드"],
+                    "제조/수입사": row["제조/수입사"],
+                    "이 약의 효능은 무엇입니까?": row["이 약의 효능은 무엇입니까?"],
+                    "이 약은 어떻게 사용합니까?": row["이 약은 어떻게 사용합니까?"],
+                    "이 약을 사용하기 전에 반드시 알아야 할 내용은 무엇입니까?": row["이 약을 사용하기 전에 반드시 알아야 할 내용은 무엇입니까?"],
+                    "이 약의 사용상 주의사항은 무엇입니까?": row["이 약의 사용상 주의사항은 무엇입니까?"],
+                    "이 약을 사용하는 동안 주의해야 할 약 또는 음식은 무엇입니까?": row["이 약을 사용하는 동안 주의해야 할 약 또는 음식은 무엇입니까?"],
+                    "이 약은 어떤 이상반응이 나타날 수 있습니까?": row["이 약은 어떤 이상반응이 나타날 수 있습니까?"],
+                    "이 약은 어떻게 보관해야 합니까?": row["이 약은 어떻게 보관해야 합니까?"]
+                }
+                return pill_info
+    return None
+
+def find_pill_info(predicted_category_id, root_dir):
+    image_file_name = f"{predicted_category_id}.png"
+    image_path = os.path.join(root_dir, image_file_name)
+
+    if os.path.exists(image_path):
+        # 이미지 경로를 터미널에 출력
+        print(f'Image path: {image_path}')
+        pill_info = {
+            "image_path": image_path
+        }
+        return pill_info
+    else:
+        print(f'Image path not found for category ID {predicted_category_id}')
+        return None
+
+
+# 이미지 예측 및 시각화 함수
+@api_view(['POST'])
+@csrf_exempt
+def predict2(request):
+    if 'image' not in request.FILES:
+        logger.error('No image file provided')
+        return JsonResponse({'error': 'No image file provided'}, status=400)
+
+    image_file = request.FILES['image']
+    image_path = '/tmp/temp_image.jpg'
+    
+    try:
+        with open(image_path, 'wb') as f:
+            for chunk in image_file.chunks():
+                f.write(chunk)
+        
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        num_classes = 151
+        model = get_model2(num_classes=num_classes)
+        
+        logger.info('Loading model weights')
+        model.load_state_dict(torch.load('/Users/seon/Desktop/model/pill_detection_4.pth', map_location=device))
+        model.to(device)
+        logger.info('Model weights loaded successfully')
+
+        image = Image.open(image_path).convert("RGB")
+        transform = T.Compose([T.ToTensor()])
+        image_tensor = transform(image).unsqueeze(0).to(device)
+    except Exception as e:
+        logger.error(f'Error loading model or processing image: {str(e)}')
+        return JsonResponse({'error': f'Error loading model or processing image: {str(e)}'}, status=500)
+
+    try:
+        model.eval()
+        with torch.no_grad():
+            outputs = model(image_tensor)
+        
+        threshold = 0.5
+        pred_scores = outputs[0]['scores'].cpu().numpy()
+        pred_labels = outputs[0]['labels'].cpu().numpy()
+        pred_labels = pred_labels[pred_scores >= threshold]
+        pred_scores = pred_scores[pred_scores >= threshold]
+
+        if len(pred_labels) == 0:
+            logger.info('No predictions made')
+            return JsonResponse({'message': 'No predictions made'}, status=200)
+
+        max_score_idx = pred_scores.argmax()
+        predicted_category_id = pred_labels[max_score_idx]
+
+        logger.info(f'Predicted category ID: {predicted_category_id}')
+
+        csv_path = '/Users/seon/Desktop/model/info.csv'
+        pill_info_csv = find_pill_info_from_csv2(predicted_category_id, csv_path)
+        root_dir = 'ict_chungbuk/ict_chungbuk/data'  # 이미지 파일이 저장된 디렉토리 경로
+        pill_info_image = find_pill_info(predicted_category_id, root_dir)
+
+        response_data = {
+            'prediction_score': float(pred_scores[max_score_idx]),
+            'product_name': pill_info_csv.get('제품명', 'Unknown') if pill_info_csv else 'Unknown',
+            'manufacturer': pill_info_csv.get('제조/수입사', 'Unknown') if pill_info_csv else 'Unknown',
+            'pill_code': pill_info_csv.get('품목기준코드', 'Unknown') if pill_info_csv else 'Unknown',
+            'efficacy': pill_info_csv.get('이 약의 효능은 무엇입니까?', 'No information') if pill_info_csv else 'No information',
+            'usage': pill_info_csv.get('이 약은 어떻게 사용합니까?', 'No information') if pill_info_csv else 'No information',
+            'precautions_before_use': pill_info_csv.get('이 약을 사용하기 전에 반드시 알아야 할 내용은 무엇입니까?', 'No information') if pill_info_csv else 'No information',
+            'usage_precautions': pill_info_csv.get('이 약의 사용상 주의사항은 무엇입니까?', 'No information') if pill_info_csv else 'No information',
+            'drug_food_interactions': pill_info_csv.get('이 약을 사용하는 동안 주의해야 할 약 또는 음식은 무엇입니까?', 'No information') if pill_info_csv else 'No information',
+            'side_effects': pill_info_csv.get('이 약은 어떤 이상반응이 나타날 수 있습니까?', 'No information') if pill_info_csv else 'No information',
+            'storage_instructions': pill_info_csv.get('이 약은 어떻게 보관해야 합니까?', 'No information') if pill_info_csv else 'No information',
+            'image_path': pill_info_image.get('image_path', 'No image available') if pill_info_image else 'No image available'
+        }
+    except Exception as e:
+        logger.error(f'Error during prediction: {str(e)}')
+        return JsonResponse({'error': f'Error during prediction: {str(e)}'}, status=500)
+    finally:
+        if os.path.exists(image_path):
+            os.remove(image_path)
+
+    logger.info('Prediction completed successfully')
+    return JsonResponse(response_data, status=200)

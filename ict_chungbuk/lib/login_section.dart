@@ -132,21 +132,12 @@ void _login() async {
               ),
             ),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _login,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple[300],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              ),
-              child: Text(
-                '로그인',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                ),
+            GestureDetector(
+              onTap: _login,
+              child: Image.asset(
+                'assets/img/login_button.png', // Use the correct path to your image
+     // Adjust the width as needed
+                fit: BoxFit.contain, // Ensure the image scales correctly
               ),
             ),
             SizedBox(height: 20),

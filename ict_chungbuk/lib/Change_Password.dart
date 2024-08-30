@@ -145,7 +145,7 @@ class _ChangePWState extends State<ChangePW> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start, // Align the column at the top
           children: [
-            SizedBox(height: 150), // Add space at the top if needed
+            SizedBox(height: 90), // Add space at the top if needed
             _buildPasswordField(
               controller: _pwController,
               labelText: '현재 비밀번호',
@@ -185,20 +185,20 @@ class _ChangePWState extends State<ChangePW> {
               visibility: _showConfirmPassword,
             ),
             SizedBox(height: 32), // Reduce space before the button
-            ElevatedButton(
-              onPressed: _updatePassword,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple[200], // Button color
-                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 16), // Button padding
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10), // Rounded corners
-                ),
-              ),
-              child: Text(
-                '비밀번호 변경',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
+  GestureDetector(
+  onTap: _updatePassword, // 기존 onPressed 대신 onTap 사용
+  child: Container(
+    width: 450, // 가로 넓이 설정
+    decoration: BoxDecoration(
+      // 필요한 경우 추가 스타일 설정
+    ),
+    child: Image.asset(
+      'assets/img/modify.png', // 이미지를 위한 경로 설정
+      fit: BoxFit.contain,
+    ),
+  ),
+),
+
           ],
         ),
       ),

@@ -10,6 +10,8 @@ from .views import  create_alarm, list_alarms,UpdateAlarmView, DeleteAlarmView
 
 urlpatterns = [
     path('predict/', views.predict, name='predict'),  # Ensure this line exists
+    path('predict2/', views.predict2, name='predict'),  # Ensure this line exists
+
     path('user_info/<str:user_id>/', views.user_info, name='get_user_info'),
     path('login_view/', views.login_view, name='login_view'),
     path('register/', views.register_user, name='register_user'),
@@ -26,6 +28,9 @@ urlpatterns = [
     path('favorites/<str:user_id>/', views.FavoritesView.as_view(), name='favorites-list'),
      path('save_search_history/', views.save_search_history, name='save_search_history'),
  path('get_search_history/<str:user_id>/', views.get_search_history, name='get_search_history'),
+  path('checkmember/<str:user_id>/', views.check_member, name='check_member'),
+   path('family/send/', views.send_family_info, name='send_family_info'),
+    #  path('family/sent-items/', views.get_sent_items, name='get_sent_items'),
     ]
 
 if settings.DEBUG:

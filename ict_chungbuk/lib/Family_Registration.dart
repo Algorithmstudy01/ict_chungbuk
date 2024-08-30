@@ -78,12 +78,13 @@ Future<void> _submitForm() async {
           children: <Widget>[
             SizedBox(height: 20),
             Center(
-              child: Text(
-                'Team Logo',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              child: Image.asset(
+                'assets/img/logo.jpg', // Update the path to your image
+                width: 100, // Adjust the width as needed
+                height: 100, // Adjust the height as needed
               ),
             ),
-            SizedBox(height: 80),
+            SizedBox(height: 50),
             TextField(
               controller: _nameController,
               decoration: InputDecoration(
@@ -143,23 +144,19 @@ Future<void> _submitForm() async {
                 hintText: '주소를 입력해 주세요',
               ),
             ),
-            SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: _submitForm,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple[200],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
-                child: Text(
-                  '가족 등록하기',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
+            SizedBox(height: 30),
+     
+        
+           GestureDetector(
+
+                 onTap: _submitForm,
+              child: Image.asset(
+                'assets/img/fam.png', // Use the correct path to your image
+                width: 350, // Adjust the width as needed
+                fit: BoxFit.contain, // Ensure the image scales correctly
               ),
             ),
+          
           ],
         ),
       ),

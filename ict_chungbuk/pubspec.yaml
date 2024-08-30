@@ -43,6 +43,9 @@ dependencies:
   permission_handler: ^11.3.1
   flutter_tts: ^4.0.2
   path_provider: ^2.1.4
+  flutter_fgbg: ^0.6.0
+  alarm: ^3.1.5
+
  
   
 
@@ -74,6 +77,14 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - assets/img/
+    - assets/img/
+    - assets/mozart.mp3
+    - assets/nokia.mp3
+    - assets/one_piece.mp3
+    - assets/star_wars.mp3
+    - assets/marimba.mp3
+    - assets/
+    - assets/data/
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 

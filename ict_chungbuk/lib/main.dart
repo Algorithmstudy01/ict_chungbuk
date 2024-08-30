@@ -1,17 +1,21 @@
 import 'package:chungbuk_ict/homepage.dart';
 import 'package:chungbuk_ict/my_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'start_section.dart';  // Import the start section
 import 'package:permission_handler/permission_handler.dart';
 import 'package:camera/camera.dart';
 import 'Camera.dart';
+import 'My_alarm/alarm.dart';
 
 late List<CameraDescription> _cameras;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Ensure widget binding is initialized
   _cameras = await availableCameras();
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  await Alarm.init();
   
   runApp(MyApp());
 
@@ -23,6 +27,8 @@ Future<void> main() async {
   Map<Permission, PermissionStatus> statuses = await [
     Permission.camera,
     Permission.storage,
+    Permission.notification,
+    Permission.scheduleExactAlarm,
   ].request();
   print(statuses[Permission.camera]);
 }

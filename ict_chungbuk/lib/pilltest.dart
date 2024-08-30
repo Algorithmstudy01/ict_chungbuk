@@ -38,7 +38,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _uploadImage(File image) async {
-    final url = Uri.parse('http://10.0.2.2:8000/predict/'); // Ensure this URL is correct
+    final url = Uri.parse('http://10.0.2.2:8000/predict2/'); // Ensure this URL is correct
 
     final request = http.MultipartRequest('POST', url)
       ..files.add(await http.MultipartFile.fromPath('file', image.path));

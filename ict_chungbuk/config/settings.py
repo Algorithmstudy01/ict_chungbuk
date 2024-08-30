@@ -162,14 +162,14 @@ APPEND_SLASH = True
 import os
 
 # CSV 파일 경로 설정
-CSV_PATH = '/Users/seon/Desktop/ict model/info.csv'
+CSV_PATH = '/Users/seon/Desktop/model/info.csv'
 
 # JSON 파일들이 있는 루트 디렉토리 설정
-DATA_ROOT_DIR = '/Users/seon/Desktop/ict model/data'
+DATA_ROOT_DIR = '/Users/seon/Desktop/model/data'
 
 # 모델 파일 경로 설정
-MODEL_PATH = '/Users/seon/Desktop/ict model/pill_detection_53_more.pth'
-IMAGE_ROOT_DIR = '/Users/seon/Desktop/ict model/image'
+MODEL_PATH = '/Users/seon/Desktop/model/pill_detection_4.pth'
+IMAGE_ROOT_DIR = '/Users/seon/Desktop/model/image'
 
 # settings.py
 
@@ -181,3 +181,24 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+
+
+# import os
+
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'console': {
+#             'level': 'DEBUG',
+#             'class': 'logging.StreamHandler',
+#         },
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['console'],
+#             'level': 'DEBUG',
+#             'propagate': True,
+#         },
+#     },
+# }

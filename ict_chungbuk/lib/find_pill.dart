@@ -1,12 +1,14 @@
 import 'dart:convert';
-import 'dart:convert';
 import 'dart:io';
 import 'package:chungbuk_ict/pill_information.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'Camera.dart';
 
 class PillInfo {
   final String pillCode;
@@ -79,6 +81,7 @@ class FindPill extends StatefulWidget {
 
 class _FindPillState extends State<FindPill> with AutomaticKeepAliveClientMixin {
   late CameraController controller;
+  late List<CameraDescription> _cameras;
   XFile? _image;
   bool _isLoading = false;
   Map<String, dynamic> _pillInfo = {};
@@ -92,26 +95,36 @@ class _FindPillState extends State<FindPill> with AutomaticKeepAliveClientMixin 
     _initializeCamera();
   }
 
-  Future<void> _initializeCamera() async {
-    final cameras = await availableCameras();
-
-    if (cameras.isNotEmpty) {
+  void _initializeCamera() {
+    final Cameras = Provider.of<Camera>(context, listen: false);
+    _cameras = Cameras.cameras;
+    if (_cameras.isNotEmpty) {
       controller = CameraController(
-        cameras[0],
+        _cameras[0],
         ResolutionPreset.max,
         enableAudio: false,
       );
 
-      try {
-        await controller.initialize();
-        if (!mounted) return;
-        setState(() {});
-      } catch (e) {
-        print("CameraController Error: ${e.toString()}");
-      }
-    } else {
-      print("No cameras available");
     }
+    controller.initialize().then((_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+      });
+    })
+        .catchError((Object e) {
+      if (e is CameraException) {
+        switch (e.code) {
+          case 'CameraAccessDenied':
+            print("CameraController Error : CameraAccessDenied");
+            break;
+          default:
+            print("CameraController Error");
+            break;
+        }
+      }
+    });
   }
 
   Future<void> _takePicture() async {
@@ -152,7 +165,7 @@ class _FindPillState extends State<FindPill> with AutomaticKeepAliveClientMixin 
   }
 
  Future<void> _uploadImage(File image) async {
-  final url = Uri.parse('http://10.0.2.2:8000/predict/');
+  final url = Uri.parse('http://10.0.2.2:8000/predict2/');
 
   final request = http.MultipartRequest('POST', url)
     ..files.add(await http.MultipartFile.fromPath('image', image.path));
@@ -286,7 +299,7 @@ Widget build(BuildContext context) {
     ),
     body: SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 50.0), // 상하 여백을 추가합니다. (좌우 여백도 필요하다면 EdgeInsets.all() 등을 사용할 수 있습니다.)
+        padding: const EdgeInsets.symmetric(vertical: 50.0), 
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -396,47 +409,25 @@ Widget build(BuildContext context) {
               children: [
                Column(
   children: [
-    SizedBox(
-      width: 335,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: controller.value.isInitialized ? _takePicture : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFC42AFA),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        child: const Text(
-          '촬영하기',
-          style: TextStyle(
-            fontSize: 18,
-            color: Colors.white,
-          ),
-        ),
-      ),
-    ),
-    SizedBox(height: 16), // 버튼 사이의 여백을 추가합니다. 이 값을 조정하여 원하는 공간을 설정할 수 있습니다.
-    SizedBox(
-      width: 335,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: _startSearch,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Color.fromARGB(255, 134, 44, 133), // Adjust color if needed
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        child: const Text(
-          '검색하기',
-          style: TextStyle(
-            fontSize: 18,
-            color: Colors.white,
-          ),
-        ),
-      ),
-    ),
+    GestureDetector(
+                          onTap: controller.value.isInitialized ? _takePicture : null,
+                          child: Image.asset(
+                            'assets/img/camera.png', 
+                            width: 350,
+                            fit: BoxFit.contain, 
+                          ),
+                        ),
+
+                        SizedBox(height: 16), 
+                        GestureDetector(
+                          onTap: _startSearch,
+                          child: Image.asset(
+                            'assets/img/search.png', 
+                            width: 355, 
+ 
+                            fit: BoxFit.contain, 
+                          ),
+                        ),
   ],
 ),
 
@@ -483,8 +474,6 @@ Widget build(BuildContext context) {
 
 
 
- // PillInfo 클래스를 정의한 파일을 가져와야 합니다.
-
 class ImageUploadScreen extends StatefulWidget {
   final String userId;
 
@@ -498,7 +487,7 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
   bool _isLoading = false;
   late Map<String, dynamic> _pillInfo;
 Future<void> _uploadImage(File image) async {
-  final url = Uri.parse('http://10.0.2.2:8000/predict/');
+  final url = Uri.parse('http://10.0.2.2:8000/predict2/');
 
   final request = http.MultipartRequest('POST', url)
     ..files.add(await http.MultipartFile.fromPath('image', image.path));
@@ -581,7 +570,7 @@ Future<void> _uploadImage(File image) async {
   }
 
   Future<void> _saveSearchHistory(PillInfo pillInfo) async {
-    // 검색 기록 저장 로직 구현 필요
+ 
   }
 
   @override

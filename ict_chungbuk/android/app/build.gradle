@@ -26,6 +26,7 @@ android {
     namespace "com.example.ict_chungbuk"
     ndkVersion flutter.ndkVersion
     compileSdk flutter.compileSdkVersion
+    compileSdkVersion 34
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

@@ -166,21 +166,12 @@ class _SignUpSectionState extends State<SignUpSection> {
             _buildTextField(_emailController, '이메일을 입력해주세요'),
             SizedBox(height: 20),
             Center(
-              child: ElevatedButton(
-                onPressed: _signUp,
-                child: Text(
-                  '회원가입',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple[300],
-                  minimumSize: Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
+              child: GestureDetector(
+                onTap: _signUp,
+                child: Image.asset(
+                  'assets/img/signup_button.png', // Use the correct path to your image
+                  width: 380, // Adjust the width as needed
+                  fit: BoxFit.contain,
                 ),
               ),
             ),
@@ -217,6 +208,6 @@ class _SignUpSectionState extends State<SignUpSection> {
           onPressed: toggleVisibility,
         ),
       ),
-    ); 
+    );
   }
 }
