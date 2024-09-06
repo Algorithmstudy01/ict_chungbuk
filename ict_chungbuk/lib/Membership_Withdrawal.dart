@@ -1,25 +1,29 @@
 import 'package:flutter/material.dart';
-import 'my_page.dart'; // Import MyPage screen
+import 'my_page.dart';
 
 class MembershipWithdrawScreen extends StatelessWidget {
+  final String userId;
+
+  MembershipWithdrawScreen({required this.userId});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // 배경색을 흰색으로 설정
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text('회원탈퇴'),
         backgroundColor: Colors.white,
-        elevation: 4, // Adjust elevation to add shadow
+        elevation: 4,
         centerTitle: true,
         foregroundColor: Colors.black,
-        shadowColor: Colors.grey.withOpacity(0.5), // Set shadow color
+        shadowColor: Colors.grey.withOpacity(0.5),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 300), // Increase the space at the top
+            SizedBox(height: 90),
             Text(
               '여기서 활동하신 모든 기록들이 삭제됩니다.',
               style: TextStyle(
@@ -37,42 +41,42 @@ class MembershipWithdrawScreen extends StatelessWidget {
                 color: Colors.black,
               ),
             ),
-            SizedBox(height: 160), // Adjust space to move content further down
+            SizedBox(height: 160),
             Text(
               '회원탈퇴를 하시겠습니까?',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
             ),
-            SizedBox(height: 16), // Increase space before the password field
+            SizedBox(height: 16),
             Text(
               '회원탈퇴를 하기 위해 비밀번호를 입력해 주세요.',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
             ),
             SizedBox(height: 20),
-            PasswordField(
-              hintText: '비밀번호를 입력해 주세요.',
-            ),
-            SizedBox(height: 40), // Increase space before the button
+            PasswordField(hintText: '비밀번호를 입력해 주세요.'),
+            SizedBox(height: 40),
             Center(
-              child: ElevatedButton(
-                onPressed: () {
+              child: GestureDetector(
+                onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => WithdrawCompleteScreen()),
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          WithdrawCompleteScreen(userId: userId),
+                    ),
                   );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple[200], // 버튼 색상
-                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 16),
-                ),
-                child: Text(
-                  '회원탈퇴',
-                  style: TextStyle(color: Colors.white),
+                child: Image.asset(
+                  'assets/img/out.png',
+                  width: 450,
+                  fit: BoxFit.contain,
                 ),
               ),
             ),
@@ -122,6 +126,10 @@ class _PasswordFieldState extends State<PasswordField> {
 }
 
 class WithdrawCompleteScreen extends StatelessWidget {
+  final String userId;
+
+  WithdrawCompleteScreen({required this.userId});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -132,12 +140,14 @@ class WithdrawCompleteScreen extends StatelessWidget {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => MyPage()),
+              MaterialPageRoute(
+                builder: (context) => MyPage(userId: userId),
+              ),
             );
           },
         ),
         backgroundColor: Colors.white,
-        elevation: 0, // Remove shadow
+        elevation: 0,
         centerTitle: true,
         foregroundColor: Colors.black,
       ),

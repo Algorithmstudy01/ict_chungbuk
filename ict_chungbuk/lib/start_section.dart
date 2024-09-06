@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'login_section.dart';
 import 'signup_section.dart';
-import 'homepage.dart'; // Import the HomePage
 
 class StartSection extends StatelessWidget {
   @override
@@ -14,73 +13,55 @@ class StartSection extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Pill icon image
-              Image.asset(
-                'assets/pill_icon.png', // Replace with your image asset path
-                width: 100,
-                height: 100,
+              // Logo image
+
+               Image.asset(
+                'assets/img/yagum3.png',
+                 // Replace with your image asset path
+               width: 230,
               ),
-              SizedBox(height: 40), // Space between image and buttons
+                SizedBox(height: 30),
+              Image.asset(
+                'assets/img/logo.jpg', // Replace with your image asset path
+                width: 200,
+                height: 200,
+              ),
+                
+              SizedBox(height: 30), // Space between image and buttons
 
               // SizedBox to ensure consistent button width
               SizedBox(
                 width: 250, // Set the desired width for all buttons
                 child: Column(
                   children: [
-                    // Start button
-                    ElevatedButton(
-                      onPressed: () {
-                        // Navigate to HomePage
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => HomePage()),
-                        );
-                      },
-                      child: Text('시작하기'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.purple[300],
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        textStyle: TextStyle(fontSize: 16),
-                        fixedSize: Size(250, 50), // Ensures consistent size
-                      ),
-                    ),
-                    SizedBox(height: 16),
-
-                    // Login button
-                    ElevatedButton(
-                      onPressed: () {
+                    // Login button with image only
+                    GestureDetector(
+                      onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => LoginSection()),
                         );
                       },
-                      child: Text('로그인'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.purple[300],
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        textStyle: TextStyle(fontSize: 16),
-                        fixedSize: Size(250, 50), // Ensures consistent size
+                      child: Image.asset(
+                        'assets/img/login_button.png', // Use the correct path to your image
+                        width: 250, // Adjust the width as needed
+                        fit: BoxFit.contain, // Ensure the image scales correctly
                       ),
                     ),
                     SizedBox(height: 16),
 
-                    // Sign Up button
-                    ElevatedButton(
-                      onPressed: () {
+                    // Sign Up button with image only
+                    GestureDetector(
+                      onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => SignUpSection()),
                         );
                       },
-                      child: Text('회원가입'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.purple[300],
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        textStyle: TextStyle(fontSize: 16),
-                        fixedSize: Size(250, 50), // Ensures consistent size
+                      child: Image.asset(
+                        'assets/img/signup_button.png', // Use the correct path to your image
+                        width: 250, // Adjust the width as needed
+                        fit: BoxFit.contain, // Ensure the image scales correctly
                       ),
                     ),
                   ],
