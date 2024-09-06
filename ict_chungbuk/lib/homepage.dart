@@ -1,12 +1,13 @@
 import 'dart:convert';
-import 'BookMark.dart';
-import 'package:chungbuk_ict/find_pill.dart';
-import 'package:chungbuk_ict/search_history_screen.dart';
 import 'package:flutter/material.dart';
-import 'my_page.dart';
-import 'package:chungbuk_ict/NewAlarm/NewAlarm.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
-import 'pill_information.dart'; // pill_information.dart 파일을 임포트
+import 'BookMark.dart';
+import 'find_pill.dart';
+import 'search_history_screen.dart';
+import 'my_page.dart';
+import 'NewAlarm/NewAlarm.dart';
+import 'pill_information.dart';
 
 class TabbarFrame extends StatelessWidget {
   final String userId;
@@ -16,15 +17,34 @@ class TabbarFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: DefaultTabController(
-        length: 3,  // Updated length to 3 since there are 3 tabs
+        length: 3,
         child: Scaffold(
           backgroundColor: Colors.white,
-          bottomNavigationBar: const TabBar(
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            centerTitle: true,
+            automaticallyImplyLeading: false, // 뒤로가기 버튼 비활성화
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.start, // 이미지와 텍스트를 왼쪽 정렬
+              children: [
+                Image.asset(
+                  'assets/img/yagum3.png', // 로고 이미지 경로
+                  height: 30, // 이미지 높이
+                ),
+                const SizedBox(width: 10), // 이미지와 텍스트 사이 간격
+              ],
+            ),
+          ),
+          bottomNavigationBar: TabBar(
             indicatorColor: Colors.white,
-            labelStyle: TextStyle(
+            labelStyle: GoogleFonts.roboto(
+              textStyle: TextStyle(
                 color: Color(0xFF333333),
                 fontWeight: FontWeight.bold,
-                fontSize: 11),
+                fontSize: 11,
+              ),
+            ),
             indicatorWeight: 4,
             tabs: [
               Tab(
@@ -44,7 +64,7 @@ class TabbarFrame extends StatelessWidget {
           body: TabBarView(
             children: [
               MyHomePage(userId: userId),
-              const ExampleAlarmHomeScreen(), // AlarmPage is from alarm.dart
+              const ExampleAlarmHomeScreen(),
               MyPage(userId: userId),
             ],
           ),
@@ -74,8 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _fetchNickname() async {
-    final response =
-    await http.get(Uri.parse('http://10.0.2.2:8000/user_info/${widget.userId}'));
+    final response = await http.get(Uri.parse('http://10.0.2.2:8000/user_info/${widget.userId}'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -83,7 +102,6 @@ class _MyHomePageState extends State<MyHomePage> {
         _nickname = data['nickname'] ?? 'Unknown User';
       });
     } else {
-      // Handle error
       setState(() {
         _nickname = 'Unknown User';
       });
@@ -107,18 +125,16 @@ class _MyHomePageState extends State<MyHomePage> {
       body: SingleChildScrollView(
         child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start, // Align items at the start
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(height: 120),  // Reduced height to 50
+              SizedBox(height: 30),  // AppBar 추가로 높이 조정
               Column(
                 children: [
                   Container(
-                    width: size.width * 0.23,
-                    height: size.width * 0.23,
-                    decoration: ShapeDecoration(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(60),
-                      ),
+                    width: size.width * 0.2,
+                    height: size.width * 0.2,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(60),
@@ -129,27 +145,45 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
                   SizedBox(
-                    width: size.width * 0.3,
-                    height: size.height * 0.04, // Reduced height
+                    width: size.width * 0.5,
+                    height: size.height * 0.05,
                     child: Text(
                       _nickname,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 28,
-                        fontFamily: 'Inter',
-                        height: 1, // Adjust line height
+                      style: GoogleFonts.roboto(
+                        textStyle: TextStyle(
+                          color: Colors.black,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w600,
+                          height: 1.2,
+                        ),
                       ),
                     ),
                   ),
+                  SizedBox(height: 40), // nickname 아래의 여백
+                  SizedBox(
+                    width: size.width * 0.9,
+                    child: Text(
+                      '알약의 정보를 알고싶다면\n 아래 검색 기능을 이용해보세요!',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.roboto(
+                        textStyle: TextStyle(
+                          color: Colors.black.withOpacity(0.9),
+                          fontSize: size.width * 0.04,
+                          fontWeight: FontWeight.bold, // 굵은 글씨
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 2), // 텍스트 아래 여백 조절
                 ],
               ),
-              SizedBox(height:1),  // Added spacing between nickname and next section
               Column(
-                mainAxisAlignment: MainAxisAlignment.start, // Align items at the start
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Container(
-                    margin: EdgeInsets.only(top: size.width * 0.1), // Reduced margin
+                    margin: EdgeInsets.only(top: size.width * 0),
                     child: SizedBox(
                       width: size.width * 0.9,
                       child: Row(
@@ -157,143 +191,141 @@ class _MyHomePageState extends State<MyHomePage> {
                         children: [
                           Expanded(
                             child: IconButton(
-                              onPressed: () =>
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => FindPill(userId: widget.userId))
-                                  ),
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      FindPill(userId: widget.userId),
+                                ),
+                              ),
                               icon: Image.asset('assets/img/find_pill.png'),
+                              iconSize: size.width * 0.15,
+                              padding: EdgeInsets.all(10),
                             ),
                           ),
                           Expanded(
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                IconButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => BookmarkScreen(userId:widget.userId),
-                                      ), // Corrected here
-                                    );
-                                  },
-                                  icon: Image.asset('assets/img/favorites.png'),
+                            child: IconButton(
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      BookmarkScreen(userId: widget.userId),
                                 ),
-                              ],
+                              ),
+                              icon: Image.asset('assets/img/favorites.png'),
+                              iconSize: size.width * 0.15,
+                              padding: EdgeInsets.all(10),
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                 
                   Container(
-                    width: size.width * 0.9,
-                    margin: const EdgeInsets.only(top: 10), // Reduced margin
-                    decoration: ShapeDecoration(
-                      color: const Color(0xffe0d3fb),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                    width: size.width * 0.85,
+                    margin: const EdgeInsets.only(top: 10),
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 162, 228, 192),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.3),
+                          spreadRadius: 3,
+                          blurRadius: 5,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
                     ),
-                    child: Align(
-                      alignment: Alignment.topLeft, // 왼쪽 위에 정렬
-                      child: Padding(
-                        padding: const EdgeInsets.all(15.0), // Increased padding for better spacing
-                        child: RichText(
-                          text: TextSpan(
-                            style: TextStyle(
-                              color: Colors.black, // 기본 글씨 색상
-                              fontSize: size.width * 0.05, // 기본 글씨 크기
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: RichText(
+                        text: TextSpan(
+                          style: GoogleFonts.roboto(
+                            textStyle: TextStyle(
+                              color: Colors.black,
+                              fontSize: size.width * 0.045,
                             ),
-                            children: [
-                              TextSpan(
-                                text: '💡도움말\n\n',
-                                style: TextStyle(
-                                  fontSize: size.width * 0.06, // 도움말의 크기를 크게
-                                  fontWeight: FontWeight.bold, // 도움말의 글씨를 굵게
-                                ),
-                              ),
-                              TextSpan(
-                                text:
-                                '야금야금은 다양한 약을 꾸준히 복용해야 하는 분들에게 쉽고 정확하게 약을 복용할 수 있도록 도와주는 어플리케이션입니다.\n\n\n',
-                                style: TextStyle(
-                                  fontSize: size.width * 0.05, // 기본 크기
-                                ),
-                              ),
-                              TextSpan(
-                                text: '⁃ 약 검색\n',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold, // 항목 제목을 굵게
-                                  fontSize: size.width * 0.06, // 제목의 크기를 약간 더 크게
-                                ),
-                              ),
-                              TextSpan(
-                                text:
-                                '알약 사진을 촬영하면 야금야금이 해당 약물의 이름과 복용 방법을 알려줍니다. 알약 정보에서 음성 아이콘을 누르고 알약의 상세정보를 음성으로 들어보세요!\n\n',
-                                style: TextStyle(
-                                  fontSize: size.width * 0.05, // 기본 설명을 조금 작게
-                                ),
-                              ),
-                              TextSpan(
-                                text: '⁃ 즐겨찾기\n',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: size.width * 0.06,
-                                ),
-                              ),
-                              TextSpan(
-                                text:
-                                '사용자가 즐겨 찾는 알약을 즐겨찾기에 추가할 수 있습니다. 나만의 알약 목록을 만들어 편하게 사용해보세요!\n\n',
-                                style: TextStyle(
-                                  fontSize: size.width * 0.05,
-                                ),
-                              ),
-                              TextSpan(
-                                text: '⁃ 알람\n',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: size.width * 0.06,
-                                ),
-                              ),
-                              TextSpan(
-                                text:
-                                '알약을 먹어야 할 시간을 등록하면 복용 시간마다 알림이 울립니다.\n\n',
-                                style: TextStyle(
-                                  fontSize: size.width * 0.05,
-                                ),
-                              ),
-                              TextSpan(
-                                text: '⁃ 내 정보\n',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: size.width * 0.06,
-                                ),
-                              ),
-                              TextSpan(
-                                text:
-                                '• 지금까지 검색한 알약 기록을 확인할 수 있습니다. \n• 비밀번호를 변경할 수 있습니다. \n• 가족을 등록하고 가족에게 알약을 추천해줄 수 있습니다.\n\n\n',
-                                style: TextStyle(
-                                  fontSize: size.width * 0.05,
-                                ),
-                              ),
-                              TextSpan(
-                                text: '⚠️주의사항\n\n',
-                                style: TextStyle(
-                                  fontSize: size.width * 0.06, // 도움말의 크기를 크게
-                                  fontWeight: FontWeight.bold, // 도움말의 글씨를 굵게
-                                ),
-                              ),
-                              TextSpan(
-                                text:
-                                '⁃ 이 어플은 참고용이며, 실제 복약 지침은 의료 전문가의 조언을 우선시하세요.\n\n⁃ 기기 설정에 따라 알림이 울리지 않을 수 있으니 중요한 약물 복용 시 소리 모드를 적용해주세요.',
-                                style: TextStyle(
-                                  fontSize: size.width * 0.05, // 기본 크기
-                                ),
-                              ),
-                            ],
                           ),
+                          children: [
+                            TextSpan(
+                              text: '💡 도움말\n\n',
+                              style: GoogleFonts.roboto(
+                                textStyle: TextStyle(
+                                  fontSize: size.width * 0.06,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            TextSpan(
+                              text:
+                                  '야금야금은 다양한 약을 꾸준히 복용해야 하는 분들에게 쉽고 정확하게 약을 복용할 수 있도록 도와주는 어플리케이션입니다.\n\n\n',
+                            ),
+                            TextSpan(
+                              text: '- 약 검색\n',
+                              style: GoogleFonts.roboto(
+                                textStyle: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: size.width * 0.05,
+                                ),
+                              ),
+                            ),
+                            TextSpan(
+                              text:
+                                  '알약 사진을 촬영하면 야금야금이 해당 약물의 이름과 복용 방법을 알려줍니다. 알약 정보에서 음성 아이콘을 누르고 알약의 상세정보를 음성으로 들어보세요!\n\n',
+                            ),
+                            TextSpan(
+                              text: '- 즐겨찾기\n',
+                              style: GoogleFonts.roboto(
+                                textStyle: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: size.width * 0.05,
+                                ),
+                              ),
+                            ),
+                            TextSpan(
+                              text:
+                                  '사용자가 즐겨 찾는 알약을 즐겨찾기에 추가할 수 있습니다. 나만의 알약 목록을 만들어 편하게 사용해보세요!\n\n',
+                            ),
+                            TextSpan(
+                              text: '- 알람\n',
+                              style: GoogleFonts.roboto(
+                                textStyle: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: size.width * 0.05,
+                                ),
+                              ),
+                            ),
+                            TextSpan(
+                              text:
+                                  '알약을 먹어야 할 시간을 등록하면 복용 시간마다 알림이 울립니다.\n\n',
+                            ),
+                            TextSpan(
+                              text: '- 내 정보\n',
+                              style: GoogleFonts.roboto(
+                                textStyle: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: size.width * 0.05,
+                                ),
+                              ),
+                            ),
+                            TextSpan(
+                              text:
+                                  '• 지금까지 검색한 알약 기록을 확인할 수 있습니다.\n• 비밀번호를 변경할 수 있습니다.\n• 가족을 등록하고 가족에게 알약을 추천해줄 수 있습니다.\n\n\n',
+                            ),
+                            TextSpan(
+                              text: '⚠️ 주의사항\n\n',
+                              style: GoogleFonts.roboto(
+                                textStyle: TextStyle(
+                                  fontSize: size.width * 0.065,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            TextSpan(
+                              text:
+                                  '- 이 어플은 참고용이며, 실제 복약 지침은 의료 전문가의 조언을 우선시하세요.\n- 기기 설정에 따라 알림이 울리지 않을 수 있으니 중요한 약물 복용 시 소리 모드를 적용해주세요.',
+                            ),
+                          ],
                         ),
                       ),
                     ),

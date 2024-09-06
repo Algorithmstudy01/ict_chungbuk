@@ -9,7 +9,6 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'Camera.dart';
-
 class PillInfo {
   final String pillCode;
   final String pillName;
@@ -143,15 +142,21 @@ class _FindPillState extends State<FindPill> with AutomaticKeepAliveClientMixin 
     }
   }
 
-  Future<void> getImage(ImageSource imageSource) async {
+Future<void> getImage(ImageSource imageSource) async {
     final XFile? pickedFile = await picker.pickImage(source: imageSource);
     if (pickedFile != null) {
       setState(() {
         _image = pickedFile;
         _pillInfo = {};
+        _isLoading = true;
       });
+
+      await _uploadImage(File(pickedFile.path));
     }
   }
+
+
+
 
   Future<void> _startSearch() async {
     if (_image != null) {
@@ -229,26 +234,26 @@ class _FindPillState extends State<FindPill> with AutomaticKeepAliveClientMixin 
       });
     }
   }
-
-  Future<void> _saveSearchHistory(PillInfo pillInfo) async {
+Future<void> _saveSearchHistory(PillInfo pillInfo) async {
     final prefs = await SharedPreferences.getInstance();
+    final userId = widget.userId;
 
     final response = await http.post(
       Uri.parse('http://10.0.2.2:8000/save_search_history/'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'user_id': widget.userId,
-        'prediction_score': pillInfo.confidence,
-        'product_name': pillInfo.pillName,
+        'prediction_score': _pillInfo['prediction_score']?.toString() ?? 'Unknown',
+        'product_name': _pillInfo['product_name'] ?? 'Unknown',
         'manufacturer': pillInfo.manufacturer,
-        'pill_code': pillInfo.pillCode,
+        'pill_code':  _pillInfo['pill_code'] ?? 'Unknown',
         'efficacy': pillInfo.efficacy,
-        'usage': pillInfo.usage,
-        'precautions_before_use': pillInfo.precautionsBeforeUse,
-        'usage_precautions': pillInfo.usagePrecautions,
-        'drug_food_interactions': pillInfo.drugFoodInteractions,
-        'side_effects': pillInfo.sideEffects,
-        'storage_instructions': pillInfo.storageInstructions,
+        'usage': _pillInfo['usage'] ?? 'No information',
+        'precautions_before_use':  _pillInfo['precautions_before_use'] ?? 'No information',
+        'usage_precautions':_pillInfo['usage_precautions'] ?? 'No information',
+        'drug_food_interactions': _pillInfo['drug_food_interactions'] ?? 'No information',
+        'side_effects': _pillInfo['efficacy'] ?? 'No information', // 추가된 부분
+        'storage_instructions': _pillInfo['storage_instructions'] ?? 'No information',
       }),
     );
 
@@ -258,6 +263,7 @@ class _FindPillState extends State<FindPill> with AutomaticKeepAliveClientMixin 
       print('Failed to save search history. Status code: ${response.statusCode}');
     }
   }
+
 
   void _showErrorDialog(String message) {
     showDialog(

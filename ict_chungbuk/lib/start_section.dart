@@ -14,12 +14,20 @@ class StartSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Logo image
+
+               Image.asset(
+                'assets/img/yagum3.png',
+                 // Replace with your image asset path
+               width: 230,
+              ),
+                SizedBox(height: 30),
               Image.asset(
                 'assets/img/logo.jpg', // Replace with your image asset path
-                width: 300,
-                height: 300,
+                width: 200,
+                height: 200,
               ),
-              SizedBox(height: 40), // Space between image and buttons
+                
+              SizedBox(height: 30), // Space between image and buttons
 
               // SizedBox to ensure consistent button width
               SizedBox(

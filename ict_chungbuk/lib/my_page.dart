@@ -58,22 +58,14 @@ class _MyPageState extends State<MyPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("My Page"),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        centerTitle: true,
-        elevation: 4, // Adjust elevation to add shadow
-        shadowColor: Colors.grey.withOpacity(0.5), // Set shadow color
-        automaticallyImplyLeading: false, // Remove the back button
-      ),
+  
       body: Container(
         color: Colors.white, // Set background color to white
         child: ListView(
           children: [
             Container(
               padding: EdgeInsets.all(16.0),
-              color: Colors.grey[100],
+              color: Colors.grey[50],
               child: Row(
                 children: [
                   CircleAvatar(

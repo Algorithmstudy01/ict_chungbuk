@@ -3,124 +3,10 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:chungbuk_ict/BookMark.dart';
-import 'package:chungbuk_ict/pill_information.dart';  // 필요한 경우만 import
+import 'package:chungbuk_ict/pill_information.dart';  // Import if necessary
 
-class SearchHistoryScreen extends StatefulWidget {
-  final String userId;
 
-  const SearchHistoryScreen({Key? key, required this.userId}) : super(key: key);
 
-  @override
-  _SearchHistoryScreenState createState() => _SearchHistoryScreenState();
-}
-
-class _SearchHistoryScreenState extends State<SearchHistoryScreen> {
-  late Future<List<PillInfo>> _searchHistory;
-
-  @override
-  void initState() {
-    super.initState();
-    _searchHistory = _fetchSearchHistory();
-  }
-
-  Future<List<PillInfo>> _fetchSearchHistory() async {
-    final response = await http.get(Uri.parse('http://10.0.2.2:8000/get_search_history/${widget.userId}'));
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}'); // Add this line to check the raw response
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data = json.decode(response.body);
-
-      if (data['results'] != null) {
-        final List<dynamic> results = data['results'];
-        return results.map((json) => PillInfo.fromJson(json)).toList();
-      } else {
-        return [];
-      }
-    } else {
-      throw Exception('Failed to load search history');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('검색 기록'),
-        backgroundColor: Colors.white, // Light purple color for AppBar
-      ),
-      body: FutureBuilder<List<PillInfo>>(
-        future: _searchHistory,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('오류: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('저장된 검색 기록이 없습니다.'));
-          } else {
-            final searchHistory = snapshot.data!;
-
-            return ListView.builder(
-              padding: const EdgeInsets.all(16.0),
-              itemCount: searchHistory.length,
-              itemBuilder: (context, index) {
-                final pillInfo = searchHistory[index];
-
-                return Card(
-                  elevation: 4,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(16.0),
-                    tileColor: Colors.purple[70], // Very light purple color for the tile
-                    title: Text(
-                      pillInfo.pillName.isNotEmpty ? pillInfo.pillName : 'No Name',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    subtitle: Text(
-                      pillInfo.efficacy.isNotEmpty ? pillInfo.efficacy : 'No Efficacy Information',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.black54,
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => InformationScreen(
-                            pillCode: pillInfo.pillCode,
-                            pillName: pillInfo.pillName,
-                            confidence: pillInfo.confidence,
-                            userId: widget.userId,
-                            usage: pillInfo.usage,
-                            precautionsBeforeUse: pillInfo.precautionsBeforeUse,
-                            usagePrecautions: pillInfo.usagePrecautions,
-                            drugFoodInteractions: pillInfo.drugFoodInteractions,
-                            sideEffects: pillInfo.sideEffects,
-                            storageInstructions: pillInfo.storageInstructions,
-                            efficacy: pillInfo.efficacy,
-                            manufacturer: pillInfo.manufacturer,
-                            extractedText: '',
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-            );
-          }
-        },
-      ),
-    );
-  }
-}
 
 class InformationScreen extends StatefulWidget {
   final String pillCode;
@@ -478,6 +364,123 @@ class PillInfo {
       storageInstructions: json['storage_instructions'] ?? 'No information',
       pillImage: json['pill_image'] ?? 'No information',
       pillInfo: json['pill_info'] ?? 'No information',
+    );
+  }
+}
+
+class SearchHistoryScreen extends StatefulWidget {
+  final String userId;
+
+  const SearchHistoryScreen({Key? key, required this.userId}) : super(key: key);
+
+  @override
+  _SearchHistoryScreenState createState() => _SearchHistoryScreenState();
+}
+
+class _SearchHistoryScreenState extends State<SearchHistoryScreen> {
+  late Future<List<PillInfo>> _searchHistory;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchHistory = _fetchSearchHistory();
+  }
+
+  Future<List<PillInfo>> _fetchSearchHistory() async {
+    final response = await http.get(Uri.parse('http://10.0.2.2:8000/get_search_history/${widget.userId}'));
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}'); // Check the raw response
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
+
+      if (data['results'] != null) {
+        final List<dynamic> results = data['results'];
+        return results.map((json) => PillInfo.fromJson(json)).toList();
+      } else {
+        return [];
+      }
+    } else {
+      throw Exception('Failed to load search history');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('검색 기록'),
+        backgroundColor: Colors.white, // Light purple color for AppBar
+      ),
+      body: FutureBuilder<List<PillInfo>>(
+        future: _searchHistory,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('오류: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text('저장된 검색 기록이 없습니다.'));
+          } else {
+            final searchHistory = snapshot.data!;
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16.0),
+              itemCount: searchHistory.length,
+              itemBuilder: (context, index) {
+                final pillInfo = searchHistory[index];
+
+                return Card(
+                  elevation: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16.0),
+                    tileColor: Colors.purple[70], // Very light purple color for the tile
+                    title: Text(
+                      pillInfo.pillName.isNotEmpty ? pillInfo.pillName : 'No Name',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      pillInfo.efficacy.isNotEmpty ? pillInfo.efficacy : 'No Efficacy Information',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => InformationScreen(
+                            pillCode: pillInfo.pillCode,
+                            pillName: pillInfo.pillName,
+                            confidence: pillInfo.confidence,
+                            userId: widget.userId,
+                            usage: pillInfo.usage,
+                            precautionsBeforeUse: pillInfo.precautionsBeforeUse,
+                            usagePrecautions: pillInfo.usagePrecautions,
+                            drugFoodInteractions: pillInfo.drugFoodInteractions,
+                            sideEffects: pillInfo.sideEffects,
+                            storageInstructions: pillInfo.storageInstructions,
+                            efficacy: pillInfo.efficacy,
+                            manufacturer: pillInfo.manufacturer,
+                            extractedText: '',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            );
+          }
+        },
+      ),
     );
   }
 }
