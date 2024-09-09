@@ -3,7 +3,7 @@ import 'dart:io'; // Import dart:io for file handling
 import 'package:http/http.dart' as http;
 
 Future<Map<String, dynamic>> getPrediction(File imageFile) async {
-  final url = Uri.parse('http://10.0.2.2:8000/predict2/'); // 서버 URL
+  final url = Uri.parse('https://b29d-222-116-163-179.ngrok-free.app/predict2/'); // 서버 URL
   
   // MultipartRequest 객체 생성
   final request = http.MultipartRequest('POST', url)

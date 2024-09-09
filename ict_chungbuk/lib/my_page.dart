@@ -32,7 +32,7 @@ class _MyPageState extends State<MyPage> {
 
   void _fetchUserInfo() async {
     final response =
-    await http.get(Uri.parse('http://10.0.2.2:8000/user_info/$_userId'));
+    await http.get(Uri.parse('https://b29d-222-116-163-179.ngrok-free.app/user_info/$_userId'));
     if (response.statusCode == 200) {
       final data = json.decode(utf8.decode(response.bodyBytes)); // UTF-8 디코딩
       setState(() {

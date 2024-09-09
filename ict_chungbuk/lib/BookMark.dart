@@ -35,7 +35,7 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
 
   Future<List<Map<String, String>>> fetchFavorites(String userId) async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:8000/favorites/$userId/'),
+      Uri.parse('https://b29d-222-116-163-179.ngrok-free.app/favorites/$userId/'),
       headers: {'Content-Type': 'application/json'},
     );
 
@@ -285,7 +285,7 @@ Widget _buildBookmarkItem(Map<String, String> favorite) {
 
 Future<void> _removeFavoriteFromServer(String pillCode) async {
   final response = await http.post(
-    Uri.parse('http://10.0.2.2:8000/favorites/remove/'),
+    Uri.parse('https://b29d-222-116-163-179.ngrok-free.app/favorites/remove/'),
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({
       'pill_code': pillCode,

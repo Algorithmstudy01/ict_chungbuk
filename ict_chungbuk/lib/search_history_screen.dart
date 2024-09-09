@@ -24,7 +24,7 @@
 //   }
 
 //   Future<List<PillInfo>> _fetchSearchHistory() async {
-//     final response = await http.get(Uri.parse('http://10.0.2.2:8000/get_search_history/${widget.userId}'));
+//     final response = await http.get(Uri.parse('https://b29d-222-116-163-179.ngrok-free.app/get_search_history/${widget.userId}'));
 
 //     if (response.statusCode == 200) {
 //       final Map<String, dynamic> data = json.decode(response.body);

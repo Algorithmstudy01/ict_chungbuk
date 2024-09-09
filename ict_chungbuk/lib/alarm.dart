@@ -45,7 +45,7 @@
 //   }
 
 //   Future<void> _fetchAlarms() async {
-//     final url = 'http://10.0.2.2:8000/alarms/${widget.userId}/'; // Ensure correct port
+//     final url = 'https://b29d-222-116-163-179.ngrok-free.app/alarms/${widget.userId}/'; // Ensure correct port
 //     try {
 //       final response = await http.get(Uri.parse(url));
 //       if (response.statusCode == 200) {
@@ -80,7 +80,7 @@
 //       return;
 //     }
 
-//     final url = 'http://10.0.2.2:8000/alarms/update/$alarmId/';
+//     final url = 'https://b29d-222-116-163-179.ngrok-free.app/alarms/update/$alarmId/';
 //     try {
 //       final response = await http.put(
 //         Uri.parse(url),
@@ -113,7 +113,7 @@
 //       return;
 //     }
 
-//     final url = 'http://10.0.2.2:8000/alarms/delete/$alarmId/';
+//     final url = 'https://b29d-222-116-163-179.ngrok-free.app/alarms/delete/$alarmId/';
 //     try {
 //       final response = await http.delete(Uri.parse(url));
 //       if (response.statusCode == 204) {
@@ -147,7 +147,7 @@
 //       builder: (BuildContext context) {
 //         return AlarmSettingModal(
 //           onSave: (time, days, name, usage) async {
-//             final url = 'http://10.0.2.2:8000/alarms/create/'; // Django URL
+//             final url = 'https://b29d-222-116-163-179.ngrok-free.app/alarms/create/'; // Django URL
 //             try {
 //               final response = await http.post(
 //                 Uri.parse(url),

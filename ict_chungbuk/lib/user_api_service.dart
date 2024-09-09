@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static String _baseUrl = 'http://10.0.2.2:8000/';
+  static String _baseUrl = 'https://b29d-222-116-163-179.ngrok-free.app/';
 
   static Future<http.Response> registerUser(
   String id,

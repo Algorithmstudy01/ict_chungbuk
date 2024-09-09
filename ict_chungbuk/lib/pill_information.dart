@@ -51,9 +51,26 @@ class _InformationScreenState extends State<InformationScreen> {
   @override
   void initState() {
     super.initState();
+    _initTts();  // TTS 초기화 함수 호출
+  }
+Future<void> _initTts() async {
     flutterTts = FlutterTts();
-    // Check if the item is already in favorites
-    _checkFavorite();
+
+    // TTS 엔진 초기화
+    await flutterTts.awaitSpeakCompletion(true);
+    
+    // 언어 설정 (한국어 예시)
+    var result = await flutterTts.setLanguage('ko-KR');
+    if (result == 1) {
+      print("언어 설정 성공");
+    } else {
+      print("선택한 언어가 지원되지 않습니다. 기본 언어로 설정합니다.");
+    }
+
+    // TTS가 초기화될 때 오류가 발생하면 로그 출력
+    flutterTts.setErrorHandler((msg) {
+      print("TTS 오류 발생: $msg");
+    });
   }
 
   void _checkFavorite() async {
@@ -136,9 +153,15 @@ Future<void> _removeFromFavorites() async {
 
 
 
-
   void speak(String text) async {
     await flutterTts.speak(text);
+  }
+
+  @override
+  void dispose() {
+    // TTS를 사용하지 않을 때 해제
+    flutterTts.stop();
+    super.dispose();
   }
 
   @override
@@ -387,7 +410,7 @@ class _SearchHistoryScreenState extends State<SearchHistoryScreen> {
   }
 
   Future<List<PillInfo>> _fetchSearchHistory() async {
-    final response = await http.get(Uri.parse('http://10.0.2.2:8000/get_search_history/${widget.userId}'));
+    final response = await http.get(Uri.parse('https://b29d-222-116-163-179.ngrok-free.app/get_search_history/${widget.userId}'));
     print('Response status: ${response.statusCode}');
     print('Response body: ${response.body}'); // Check the raw response
 

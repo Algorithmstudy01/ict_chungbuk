@@ -41,7 +41,7 @@ class _SignUpSectionState extends State<SignUpSection> {
     }
 
     final response = await http.post(
-      Uri.parse('http://10.0.2.2:8000/register/'),
+      Uri.parse('https://b29d-222-116-163-179.ngrok-free.app/register/'),
       headers: {
         'Content-Type': 'application/json',
       },
