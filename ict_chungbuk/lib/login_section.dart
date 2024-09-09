@@ -27,7 +27,7 @@ void _login() async {
  if (id.isNotEmpty && password.isNotEmpty) {
       try {
         final response = await http.post(
-          Uri.parse('http://10.0.2.2:8000/login_view/'),
+          Uri.parse('https://b29d-222-116-163-179.ngrok-free.app/login_view/'),
           headers: {
             'Content-Type': 'application/json',
           },

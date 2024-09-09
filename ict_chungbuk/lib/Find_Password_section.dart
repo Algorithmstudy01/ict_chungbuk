@@ -25,7 +25,7 @@ class _FindPasswordSectionState extends State<FindPasswordSection> {
       return;
     }
 
-    final url = 'http://10.0.2.2:8000/find_password/'; // Replace with your Django endpoint
+    final url = 'https://b29d-222-116-163-179.ngrok-free.app/find_password/'; // Replace with your Django endpoint
     final response = await http.post(
       Uri.parse(url),
       headers: {'Content-Type': 'application/json'},

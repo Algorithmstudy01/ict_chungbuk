@@ -29,6 +29,8 @@ DEBUG = True
 DEBUG = True
 DATA_GO_KR_API_KEY = 'REh3PMeCnCEQ8FDmxaJsDJdEVH8X1+svbH+0muVQSeCsWAgkk7AMmT9CzH2o5hK5zfL1Pf2hH2uwTS5JnQcx2g=='
 ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = ['https://b29d-222-116-163-179.ngrok-free.app']
+
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

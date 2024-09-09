@@ -28,7 +28,7 @@
 
 //   void _fetchUserInfo() async {
 //     final response = await http
-//         .get(Uri.parse('http://10.0.2.2:8000/user_info/${widget.username}'));
+//         .get(Uri.parse('https://b29d-222-116-163-179.ngrok-free.app/user_info/${widget.username}'));
 //     if (response.statusCode == 200) {
 //       final data = json.decode(utf8.decode(response.bodyBytes)); // UTF-8 디코딩
 //       setState(() {
@@ -79,7 +79,7 @@
 //     };
 
 //     final response = await http.post(
-//       Uri.parse('http://10.0.2.2:8000/update_user_info/'),
+//       Uri.parse('https://b29d-222-116-163-179.ngrok-free.app/update_user_info/'),
 //       body: json.encode(data),
 //       headers: {'Content-Type': 'application/json'},
 //     );

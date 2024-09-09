@@ -126,34 +126,40 @@ class _FindPillState extends State<FindPill> with AutomaticKeepAliveClientMixin 
     });
   }
 
-  Future<void> _takePicture() async {
-    if (!controller.value.isInitialized) {
-      print("Camera controller is not initialized.");
-      return;
-    }
-    try {
-      final XFile file = await controller.takePicture();
-      setState(() {
-        _image = file;
-        _pillInfo = {};
-      });
-    } catch (e) {
-      print('Error taking picture: $e');
-    }
+Future<void> _takePicture() async {
+  if (!controller.value.isInitialized) {
+    print("Camera controller is not initialized.");
+    return;
   }
+  try {
+    final XFile file = await controller.takePicture();
+    setState(() {
+      _image = file;
+      _pillInfo = {};
+      _isLoading = true; // 업로드가 시작될 때 로딩 상태를 표시
+    });
+
+    // 촬영한 이미지를 서버로 업로드
+    await _uploadImage(File(file.path));
+  } catch (e) {
+    print('Error taking picture: $e');
+    _showErrorDialog('이미지 촬영 중 오류가 발생했습니다.');
+  }
+}
 
 Future<void> getImage(ImageSource imageSource) async {
-    final XFile? pickedFile = await picker.pickImage(source: imageSource);
-    if (pickedFile != null) {
-      setState(() {
-        _image = pickedFile;
-        _pillInfo = {};
-        _isLoading = true;
-      });
+  final XFile? pickedFile = await picker.pickImage(source: imageSource);
+  if (pickedFile != null) {
+    setState(() {
+      _image = pickedFile;
+      _pillInfo = {};
+      _isLoading = true;
+    });
 
-      await _uploadImage(File(pickedFile.path));
-    }
+    // 선택한 이미지를 서버로 업로드
+    await _uploadImage(File(pickedFile.path));
   }
+}
 
 
 
@@ -170,7 +176,7 @@ Future<void> getImage(ImageSource imageSource) async {
   }
 
  Future<void> _uploadImage(File image) async {
-  final url = Uri.parse('http://10.0.2.2:8000/predict2/');
+  final url = Uri.parse('https://b29d-222-116-163-179.ngrok-free.app/predict2/');
 
   final request = http.MultipartRequest('POST', url)
     ..files.add(await http.MultipartFile.fromPath('image', image.path));
@@ -239,7 +245,7 @@ Future<void> _saveSearchHistory(PillInfo pillInfo) async {
     final userId = widget.userId;
 
     final response = await http.post(
-      Uri.parse('http://10.0.2.2:8000/save_search_history/'),
+      Uri.parse('https://b29d-222-116-163-179.ngrok-free.app/save_search_history/'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'user_id': widget.userId,
@@ -287,8 +293,7 @@ Future<void> _saveSearchHistory(PillInfo pillInfo) async {
   void dispose() {
     controller.dispose();
     super.dispose();
-  }
-@override
+  }@override
 Widget build(BuildContext context) {
   super.build(context);
   final Size size = MediaQuery.of(context).size;
@@ -303,174 +308,174 @@ Widget build(BuildContext context) {
       shadowColor: Colors.grey.withOpacity(0.5),
       automaticallyImplyLeading: false,
     ),
-    body: SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 50.0), 
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              SizedBox(
-                width: size.width * 0.8,
-                height: size.height * 0.06,
-                child: const Text(
-                  '알약 촬영하기',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 25,
-                    fontFamily: 'Manrope',
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            Column(
-              children: [
+    body: Container(
+      color: Colors.white, // AppBar 제외한 백그라운드 흰색 설정
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 50.0),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
                 SizedBox(
                   width: size.width * 0.8,
-                  height: size.height * 0.09,
-                  child: const Text.rich(
-                    TextSpan(
+                  height: size.height * 0.06,
+                  child: const Text(
+                    '알약 촬영하기',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 25,
+                      fontFamily: 'Manrope',
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Column(
+                  children: [
+                    SizedBox(
+                      width: size.width * 0.8,
+                      height: size.height * 0.09,
+                      child: const Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: '정확한 알약 확인을 위해 사진을 준비해 주세요.\n아래의 ',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                                fontFamily: 'Manrope',
+                                height: 1.5,
+                              ),
+                            ),
+                            TextSpan(
+                              text: '촬영하기',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                                fontFamily: 'Manrope',
+                                fontWeight: FontWeight.bold,
+                                height: 1.5,
+                              ),
+                            ),
+                            TextSpan(
+                              text: ' 버튼을 눌러 사진을 찍어주세요.',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                                fontFamily: 'Manrope',
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: SizedBox(
+                        width: size.width * 0.7,
+                        height: size.width * 0.7,
+                        child: _isLoading
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CircularProgressIndicator(),
+                                  SizedBox(height: 10),
+                                  Text(
+                                    '알약 검색 중입니다...',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : (_image != null
+                                ? Image.file(
+                                    File(_image!.path),
+                                    fit: BoxFit.cover,
+                                  )
+                                : (controller.value.isInitialized
+                                    ? CameraPreview(controller)
+                                    : Container(color: Colors.grey))),
+                      ),
+                    ),
+                    SizedBox(
+                      width: size.width * 0.9,
+                      height: size.height * 0.09,
+                      child: const Text(
+                        '사진을 촬영, 등록하면, 위의 그림과 같이 텍스트를 \n인식하여 자동으로 알약의 정보를 불러옵니다.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Color(0xFF4F4F4F),
+                          fontSize: 16,
+                          fontFamily: 'Manrope',
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  children: [
+                    Column(
                       children: [
-                        TextSpan(
-                          text: '정확한 알약 확인을 위해 사진을 준비해 주세요.\n아래의 ',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 16,
-                            fontFamily: 'Manrope',
-                            height: 1.5,
+                        GestureDetector(
+                          onTap: controller.value.isInitialized ? _takePicture : null,
+                          child: Image.asset(
+                            'assets/img/camera.png',
+                            width: 350,
+                            fit: BoxFit.contain,
                           ),
                         ),
-                        TextSpan(
-                          text: '촬영하기',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 16,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.bold,
-                            height: 1.5,
-                          ),
-                        ),
-                        TextSpan(
-                          text: ' 버튼을 눌러 사진을 찍어주세요.',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 16,
-                            fontFamily: 'Manrope',
-                            height: 1.5,
+                        SizedBox(height: 16),
+                        GestureDetector(
+                          onTap: _startSearch,
+                          child: Image.asset(
+                            'assets/img/search.png',
+                            width: 355,
+                            fit: BoxFit.contain,
                           ),
                         ),
                       ],
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(20.0),
-                  child: SizedBox(
-                    width: size.width * 0.7,
-                    height: size.width * 0.7,
-                    child: _isLoading
-                        ? Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              CircularProgressIndicator(),
-                              SizedBox(height: 10),
-                              Text(
-                                '알약 검색 중입니다...',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ],
-                          )
-                        : (_image != null
-                            ? Image.file(
-                                File(_image!.path),
-                                fit: BoxFit.cover,
-                              )
-                            : (controller.value.isInitialized
-                                ? CameraPreview(controller)
-                                : Container(color: Colors.grey))),
-                  ),
-                ),
-                SizedBox(
-                  width: size.width * 0.9,
-                  height: size.height * 0.09,
-                  child: const Text(
-                    '사진을 촬영, 등록하면, 위의 그림과 같이 텍스트를 \n인식하여 자동으로 알약의 정보를 불러옵니다.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Color(0xFF4F4F4F),
-                      fontSize: 16,
-                      fontFamily: 'Manrope',
-                      height: 1.5,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Column(
-              children: [
-               Column(
-  children: [
-    GestureDetector(
-                          onTap: controller.value.isInitialized ? _takePicture : null,
-                          child: Image.asset(
-                            'assets/img/camera.png', 
-                            width: 350,
-                            fit: BoxFit.contain, 
+                    SizedBox(
+                      width: 335,
+                      height: 56,
+                      child: TextButton(
+                        onPressed: () {
+                          if (_image == null) {
+                            getImage(ImageSource.gallery);
+                          } else {
+                            setState(() {
+                              _image = null; // Clear the current image
+                            });
+                          }
+                        },
+                        child: Text(
+                          _image == null ? '갤러리에서 사진 가져오기' : '다른 사진 등록하기',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Color(0xFF383838),
+                            fontSize: 16,
+                            fontFamily: 'Manrope',
                           ),
                         ),
-
-                        SizedBox(height: 16), 
-                        GestureDetector(
-                          onTap: _startSearch,
-                          child: Image.asset(
-                            'assets/img/search.png', 
-                            width: 355, 
- 
-                            fit: BoxFit.contain, 
-                          ),
-                        ),
-  ],
-),
-
-                  SizedBox(
-                  width: 335,
-                  height: 56,
-                  child: TextButton(
-                    onPressed: () {
-                      if (_image == null) {
-                        getImage(ImageSource.gallery);
-                      } else {
-                        setState(() {
-                          _image = null; // Clear the current image
-                        });
-                      }
-                    },
-                    child: Text(
-                      _image == null ? '갤러리에서 사진 가져오기' : '다른 사진 등록하기',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Color(0xFF383838),
-                        fontSize: 16,
-                        fontFamily: 'Manrope',
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-
           ),
         ),
-      );
+      ),
+    ),
+  );
 }
+
 
   @override
   bool get wantKeepAlive => true;
@@ -493,7 +498,7 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
   bool _isLoading = false;
   late Map<String, dynamic> _pillInfo;
 Future<void> _uploadImage(File image) async {
-  final url = Uri.parse('http://10.0.2.2:8000/predict2/');
+  final url = Uri.parse('https://b29d-222-116-163-179.ngrok-free.app/predict2/');
 
   final request = http.MultipartRequest('POST', url)
     ..files.add(await http.MultipartFile.fromPath('image', image.path));
